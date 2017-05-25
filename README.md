@@ -6,7 +6,9 @@ Arch linux Compiler Option
 -pthread -lpthread -lboost_system -lboost_thread
 
 // Server
+
 -lthrift -lthriftnb -levent -pthread -lpthread -lboost_system -lboost_thread
 
 //Client
+
 -lthrift -pthread -lpthread -lboost_system -lboost_thread
