@@ -462,15 +462,15 @@ void thriftThread(string multiCastAdress) {
 
         while (true) {
 
-            if (sensorActualMapList.size() <= 2) {
+            if (sensorActualMapList.size() >= 2) {
                 for (auto& s : sensorActualMapList) {
 
-                    int bestellMenge = stoi(s.second->GetSensorValue());
+                    int bestellMenge = 100 - stoi(s.second->GetSensorValue());
+                    
+                    if (stoi(s.second->GetSensorValue()) <= 20) {
 
-                    if (bestellMenge < 20) {
-
-
-                        bestellMenge = 100 - bestellMenge;
+                        cout << "IN WHILE "<< endl;
+                        //bestellMenge =  bestellMenge;
                         ProductAnswer productAnswer;
                         int productId = stoi(s.second->GetSensorNr());
 
@@ -488,6 +488,7 @@ void thriftThread(string multiCastAdress) {
                         size_t request_length = sbuffer.str().size();
 
                         cout << "THRIFT THREAD !!!!!!!!!!!!!!!!!!\n\n" << sbuffer.str() << "\n" << endl;
+                        cout << "Bestellmenge :" << bestellMenge << endl;
                         // Multicast Send_to
                         //multiCastServer.handle_send_to(cRequest, request_length);
                         multiCastServer.send(sbuffer.str());
@@ -519,7 +520,7 @@ int main(int argc, char* argv[]) {
 
         t1 = thread(udpSensorServerThread, argv[1]);
         t2 = thread(tcpWebserverThread, argv[2]);
-        t3 = thread(thriftThread, "239.255.0.1");
+        t3 = thread(thriftThread, "172.16.207.255");
 
         t1.join();
         t2.join();

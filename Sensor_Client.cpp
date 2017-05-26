@@ -33,23 +33,27 @@ std::mutex m;
 
 void refillSensorValue(int &sensorValue, int sensorNr) {
 
+    cout << "IN REFILL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << endl;
+   
+    string ipMulticast = "172.16.207.255";
+    string netzmaske = "0.0.0.0";
+    
     boost::asio::io_service io_service;
-    const string brIP = "239.255.0.1";
     MultiCastReceiver r(io_service,
-            boost::asio::ip::address::from_string("0.0.0.0"),
-            boost::asio::ip::address::from_string(brIP));
+            boost::asio::ip::address::from_string(netzmaske),
+            boost::asio::ip::address::from_string(ipMulticast));
     io_service.run();
 
-    cout << "IN REFILL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << endl;
+    
 
-    string test = r.receive();
+    //string test = r.receive();
     cout << "IN REFILL test: " << endl;
-    cout << test << endl;
+    /*cout << test << endl;
     if (test.size() >= 3) {
         cout << "IN REFILL IF ABFRAGE" << endl;
         cout << test << endl;
 
-    }
+    }*/
 
 }
 
@@ -133,6 +137,7 @@ int main(int argc, char* argv[]) {
                 }
                 //        sender.join();
          */
+
         srand(time(NULL));
         thread t[numberOfSensors];
 
