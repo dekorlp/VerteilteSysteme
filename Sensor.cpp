@@ -16,6 +16,8 @@
 #include <iostream>
 #include <sstream>
 
+// HALLO TEST
+
 Sensor::Sensor(std::string sensorNr, std::string sensorValue) {
     this->sensorNr = sensorNr;
     this->sensorValue = sensorValue;
@@ -37,6 +39,14 @@ std::string Sensor::GetSensorNr() const {
 
 void Sensor::objectOutput() {
     std::cout << "Sensor Nr. [" << this->sensorNr << "]" << "\t Sensor Value= " << this->sensorValue << std::endl;
+}
+
+void Sensor::SetSensorValue(std::string sensorValue) {
+    this->sensorValue = sensorValue;
+}
+
+void Sensor::SetSensorNr(std::string sensorNr) {
+    this->sensorNr = sensorNr;
 }
 
 std::string Sensor::toString() {

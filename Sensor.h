@@ -25,9 +25,14 @@ public:
     std::string GetSensorValue() const;
     std::string GetSensorNr() const;
     
+    void SetSensorValue(std::string sensorValue);
+    void SetSensorNr(std::string sensorNr);
+    
+    
     std::string toString();
     
     void objectOutput();
+    
 private:
     std::string sensorNr;
     std::string sensorValue;

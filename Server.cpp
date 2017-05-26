@@ -7,7 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-
+// UPLOADED
 #include <cstdlib>
 #include <iostream>
 #include <boost/bind.hpp>
@@ -20,9 +20,22 @@
 #include <chrono>
 #include <fstream>
 #include <map>
+#include "MultiCastSender.h"
+
+
+#include <thrift/protocol/TBinaryProtocol.h>
+#include <thrift/transport/TSocket.h>
+#include <thrift/transport/TTransportUtils.h>
+#include <boost/array.hpp>
+
+#include "gen-cpp/ShopRequest.h"
 
 using boost::asio::ip::udp;
 using boost::asio::ip::tcp;
+
+using namespace apache::thrift;
+using namespace apache::thrift::protocol;
+using namespace apache::thrift::transport;
 
 using namespace std;
 
@@ -50,7 +63,6 @@ string getActualTime() {
 
 /* HTTP Methoden */
 string includeActualSensorData(map<int, Sensor* > mapList) {
-
 
     string s;
     for (auto it = mapList.begin(); it != mapList.end(); it++) {
@@ -422,23 +434,98 @@ void udpSensorServerThread(char* argv) {
     io_service.run();
 }
 
+void refillSensor() {
+
+
+}
+
+void thriftThread(string multiCastAdress) {
+
+
+    cout << "THRIFT THREAD FUNCTION" << endl;
+
+    boost::shared_ptr<TTransport> socket(new TSocket("localhost", 9090));
+    boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
+    boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
+    ShopRequestClient client(protocol);
+
+    // Multicast an alle Sensoren, um diese Aufzufüllen
+
+    boost::asio::io_service io_service;
+    MultiCastSender multiCastServer(io_service, boost::asio::ip::address::from_string(multiCastAdress));
+    io_service.run();
+
+
+
+    try {
+        transport->open();
+
+        while (true) {
+
+            if (sensorActualMapList.size() <= 2) {
+                for (auto& s : sensorActualMapList) {
+
+                    int bestellMenge = stoi(s.second->GetSensorValue());
+
+                    if (bestellMenge < 20) {
+
+
+                        bestellMenge = 100 - bestellMenge;
+                        ProductAnswer productAnswer;
+                        int productId = stoi(s.second->GetSensorNr());
+
+                        client.buyProducts(productAnswer, productId, bestellMenge);
+
+                        // Broadcast data.
+                        stringstream sbuffer;
+                        sbuffer << productId;
+                        sbuffer << "#";
+                        sbuffer << bestellMenge;
+                        sbuffer << "\0";
+
+                        char cRequest[1024] = "";
+                        strcat(cRequest, sbuffer.str().c_str());
+                        size_t request_length = sbuffer.str().size();
+
+                        cout << "THRIFT THREAD !!!!!!!!!!!!!!!!!!\n\n" << sbuffer.str() << "\n" << endl;
+                        // Multicast Send_to
+                        //multiCastServer.handle_send_to(cRequest, request_length);
+                        multiCastServer.send(sbuffer.str());
+
+                    }
+                }
+            }
+            //sleep(3);
+        }
+
+        transport->close();
+    } catch (TException& tx) {
+        cout << "ERROR: " << tx.what() << endl;
+    }
+}
+
 int main(int argc, char* argv[]) {
 
     try {
         if (argc != 3) {
-            std::cerr << "Please type UDP <port> and TCP <port> vor Sensor Data and Webserver \n";
+            std::cerr << "Please type UDP <port> and TCP <port> vor Sensor Data, Webserver and <IP> of Sensors\n";
             return 1;
         }
 
 
         thread t1;
         thread t2;
+        thread t3;
 
         t1 = thread(udpSensorServerThread, argv[1]);
         t2 = thread(tcpWebserverThread, argv[2]);
+        t3 = thread(thriftThread, "239.255.0.1");
 
         t1.join();
         t2.join();
+        t3.join();
+
+
 
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
