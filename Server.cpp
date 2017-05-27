@@ -240,7 +240,6 @@ private:
                 handle_write(error);
             }
 
-
         } else {
             this->socket_.close();
             delete this;
@@ -520,7 +519,7 @@ int main(int argc, char* argv[]) {
 
         t1 = thread(udpSensorServerThread, argv[1]);
         t2 = thread(tcpWebserverThread, argv[2]);
-        t3 = thread(thriftThread, "172.16.207.255");
+        t3 = thread(thriftThread, "224.0.0.1");
 
         t1.join();
         t2.join();

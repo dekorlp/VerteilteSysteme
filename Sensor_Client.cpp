@@ -34,20 +34,18 @@ std::mutex m;
 void refillSensorValue(int &sensorValue, int sensorNr) {
 
     cout << "IN REFILL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << endl;
-   
-    string ipMulticast = "172.16.207.255";
+
+    string ipMulticast = "224.0.0.1";
     string netzmaske = "0.0.0.0";
-    
+
     boost::asio::io_service io_service;
     MultiCastReceiver r(io_service,
             boost::asio::ip::address::from_string(netzmaske),
             boost::asio::ip::address::from_string(ipMulticast));
     io_service.run();
 
-    
-
     //string test = r.receive();
-    cout << "IN REFILL test: " << endl;
+
     /*cout << test << endl;
     if (test.size() >= 3) {
         cout << "IN REFILL IF ABFRAGE" << endl;
@@ -68,9 +66,7 @@ void sensorThread(int sensorNr, int reduceProz, char* argv[]) {
     udp::resolver::query query(udp::v4(), argv[1], argv[2]);
     udp::resolver::iterator iterator = resolver.resolve(query);
 
-
-    // Falls countIfzero =0 setzte Sensor value wieder auf 100
-    int countIfzero = 5;
+    
 
     while (true) {
         m.lock();
@@ -91,17 +87,15 @@ void sensorThread(int sensorNr, int reduceProz, char* argv[]) {
 
         /////////// Sende Ende/////////////////
         if (sensorValue <= 20) {
-            thread receiveThread;
-
-            receiveThread = thread(refillSensorValue, std::ref(sensorValue), sensorNr);
-
-            receiveThread.join();
+            cout << "BIN BALD LEER " << endl;
+            
+            sensorValue = 200;
         }
 
         if (sensorValue <= 0 || sensorValue <= reduceProz) {
             sensorValue = 0;
-            countIfzero--;
-            if (countIfzero == 0) {
+            //            countIfzero--;
+            if (1 == 0) {
                 // Recaive Thread
 
             }
@@ -110,7 +104,7 @@ void sensorThread(int sensorNr, int reduceProz, char* argv[]) {
         }
 
         m.unlock();
-        sleep(1);
+        sleep(2);
     }
 }
 
@@ -137,7 +131,14 @@ int main(int argc, char* argv[]) {
                 }
                 //        sender.join();
          */
+        int i = 100;
+        thread receiveThread;
 
+            receiveThread = thread(refillSensorValue, std::ref(i), 2);
+
+            receiveThread.join();
+        
+        
         srand(time(NULL));
         thread t[numberOfSensors];
 

@@ -21,6 +21,9 @@ MultiCastSender::MultiCastSender(boost::asio::io_service& io_service,
 socket_(io_service, endpoint_.protocol()),
 timer_(io_service),
 message_count_(0) {
+    
+    
+    
 }
 
 void MultiCastSender::send(std::string message) {
@@ -30,6 +33,7 @@ void MultiCastSender::send(std::string message) {
     std::stringstream ss;
     ss.clear();
     ss << message;
+    ss << "###";
     ss << "\0";
 
 
@@ -37,7 +41,7 @@ void MultiCastSender::send(std::string message) {
     char chrs[MAX];
 
     memset(chrs, '\0', MAX);
-    message.copy(chrs, MAX - 1);
+    ss.str().copy(chrs, MAX - 1);
 
 //    strcat(request, ss.str().c_str());
 
