@@ -30,6 +30,20 @@ enum {
 };
 
 std::mutex m;
+std::mutex mm;
+
+// restart Sensors setzt Sensoren auf 100 zurück
+void restartSensors()
+{
+    string ipMulticast = "224.0.0.1";
+    string netzmaske = "0.0.0.0";
+
+     boost::asio::io_service io_service;
+    MultiCastReceiver r(io_service,
+        boost::asio::ip::address::from_string(netzmaske),
+        boost::asio::ip::address::from_string(ipMulticast));
+    io_service.run();
+}
 
 void refillSensorValue(int &sensorValue, int sensorNr) {
 
@@ -38,11 +52,11 @@ void refillSensorValue(int &sensorValue, int sensorNr) {
     string ipMulticast = "224.0.0.1";
     string netzmaske = "0.0.0.0";
 
-    boost::asio::io_service io_service;
+    /* boost::asio::io_service io_service;
     MultiCastReceiver r(io_service,
-            boost::asio::ip::address::from_string(netzmaske),
-            boost::asio::ip::address::from_string(ipMulticast));
-    io_service.run();
+        boost::asio::ip::address::from_string(netzmaske),
+        boost::asio::ip::address::from_string(ipMulticast));
+    io_service.run();*/
 
     //string test = r.receive();
 
@@ -53,6 +67,10 @@ void refillSensorValue(int &sensorValue, int sensorNr) {
 
     }*/
 
+}
+
+void newCoutThread(){
+    cout << "\n\nHEllo World !!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" << endl;
 }
 
 void sensorThread(int sensorNr, int reduceProz, char* argv[]) {
@@ -88,16 +106,31 @@ void sensorThread(int sensorNr, int reduceProz, char* argv[]) {
         /////////// Sende Ende/////////////////
         if (sensorValue <= 20) {
             cout << "BIN BALD LEER " << endl;
+            //thread receiveThread;
+
             
-            sensorValue = 200;
+            //receiveThread = thread(refillSensorValue, std::ref(sensorValue), sensorNr);
+            /*mm.lock();
+            thread dieterBohlen;
+            dieterBohlen = std::thread(neuerThread);
+            dieterBohlen.join();
+            mm.unlock();*/
+         
+            
+           // receiveThread.join();
+            //dieterBohlen.join();
+            sensorValue = 100;
         }
 
         if (sensorValue <= 0 || sensorValue <= reduceProz) {
             sensorValue = 0;
             //            countIfzero--;
+            
+            
+            
             if (1 == 0) {
                 // Recaive Thread
-
+                
             }
         } else if (sensorValue > 0) {
             sensorValue = sensorValue - reduceProz;
@@ -109,52 +142,38 @@ void sensorThread(int sensorNr, int reduceProz, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
+    
+    
     try {
         if (argc != 3) {
             std::cerr << "Usage: blocking_udp_echo_client <host> <port>\n";
             return 1;
         }
 
-        /*        std::thread t[4];
-                //    std::thread sender;
-
-                //for(int i = 0; i < 4; i++){
-                t[0] = std::thread(sensorThread, 0, 5, argv);
-                t[1] = std::thread(sensorThread, 1, 3, argv);
-                t[2] = std::thread(sensorThread, 2, 10, argv);
-                t[3] = std::thread(sensorThread, 3, 20, argv);
-                //        sender = std::thread(senderThread, argv);
-                //}
-
-                for (int i = 0; i < 4; i++) {
-                    t[i].join();
-                }
-                //        sender.join();
-         */
-        int i = 100;
-        thread receiveThread;
-
-            receiveThread = thread(refillSensorValue, std::ref(i), 2);
-
-            receiveThread.join();
-        
         
         srand(time(NULL));
         thread t[numberOfSensors];
-
+        thread refillThread;
+        
         for (int i = 0; i < numberOfSensors; i++) {
             t[i] = std::thread(sensorThread, i, (rand() % 20 + 1), argv);
         }
-
+        refillThread = std::thread(restartSensors);
+        
         for (int i = 0; i < numberOfSensors; i++) {
             t[i].join();
         }
+        
+        
+        refillThread.join();
+        
+        
 
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }
 
-
+    
 
 
     return 0;

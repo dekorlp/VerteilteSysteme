@@ -433,10 +433,7 @@ void udpSensorServerThread(char* argv) {
     io_service.run();
 }
 
-void refillSensor() {
 
-
-}
 
 void thriftThread(string multiCastAdress) {
 
@@ -451,8 +448,8 @@ void thriftThread(string multiCastAdress) {
     // Multicast an alle Sensoren, um diese Aufzufüllen
 
     boost::asio::io_service io_service;
-    MultiCastSender multiCastServer(io_service, boost::asio::ip::address::from_string(multiCastAdress));
-    io_service.run();
+    //MultiCastSender multiCastServer(io_service, boost::asio::ip::address::from_string(multiCastAdress));
+   // io_service.run();
 
 
 
@@ -490,7 +487,7 @@ void thriftThread(string multiCastAdress) {
                         cout << "Bestellmenge :" << bestellMenge << endl;
                         // Multicast Send_to
                         //multiCastServer.handle_send_to(cRequest, request_length);
-                        multiCastServer.send(sbuffer.str());
+                       // multiCastServer.send(sbuffer.str());
 
                     }
                 }
@@ -504,6 +501,18 @@ void thriftThread(string multiCastAdress) {
     }
 }
 
+
+
+void refillSensor() {
+
+    
+    boost::asio::io_service io_service;
+    MultiCastSender s(io_service, boost::asio::ip::address::from_string("224.0.0.1"));
+    io_service.run();
+    //s.send("SCHWWWUUUUUUL");
+    
+}
+
 int main(int argc, char* argv[]) {
 
     try {
@@ -515,15 +524,20 @@ int main(int argc, char* argv[]) {
 
         thread t1;
         thread t2;
-        thread t3;
+        //hread t3;
+        thread t4;
 
         t1 = thread(udpSensorServerThread, argv[1]);
         t2 = thread(tcpWebserverThread, argv[2]);
-        t3 = thread(thriftThread, "224.0.0.1");
+        //t3 = thread(thriftThread, "224.0.0.1");
+        t4 = thread(refillSensor);
 
+        
         t1.join();
         t2.join();
-        t3.join();
+        //t3.join();
+        t4.join();
+        
 
 
 

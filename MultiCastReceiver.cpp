@@ -46,45 +46,20 @@ MultiCastReceiver::MultiCastReceiver(boost::asio::io_service& io_service,
             boost::asio::placeholders::bytes_transferred));
 
     cout << "AFTER RECEIVE " << endl;
-
-
-
-    boost::system::error_code ec;
-
-
-    socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-    cout << "BEFORE SOCKET CLOSE " << endl;
-    socket_.close();
-    
-    cout << "BEFORE DELETE " << endl;
-   // delete this;
-    io_service.stop();
-}
-
-std::string MultiCastReceiver::receive() {
-    socket_.async_receive_from(
-            boost::asio::buffer(data_, max_length), sender_endpoint_,
-            boost::bind(&MultiCastReceiver::handle_receive_from, this,
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
-
-    string message = data_;
-    cout << "SENDERENDPOINT: " << sender_endpoint_.address().to_string() << endl;
-    cout << "MESSAGE MULTICAST RECV: \n\n" << message << "\n" << endl;
-    cout << "MESSAGE MULTICAST DATA: \n\n" << endl;
-    cout.write(data_, max_length);
-    cout << "\n" << endl;
-    return message;
 }
 
 void MultiCastReceiver::handle_receive_from(const boost::system::error_code& error, size_t bytes_recvd) {
 
     cout << "IN HANDLE RECEIVE FROM " << endl;
+
+
     if (!error) {
         cout << "IN HANDLE RECEIVE FROM != ERROR" << endl;
         cout << "DATA_ \n\n" << data_ << "\n\nData END" << endl;
+        
         std::cout.write(data_, bytes_recvd);
         std::cout << std::endl;
+        std::cout.flush();
         socket_.async_receive_from(
                 boost::asio::buffer(data_, max_length), sender_endpoint_,
                 boost::bind(&MultiCastReceiver::handle_receive_from, this,
