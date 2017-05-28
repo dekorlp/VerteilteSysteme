@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <string>
+#include <mutex>
 #include <boost/asio.hpp>
 #include "boost/bind.hpp"
 
@@ -25,9 +26,12 @@ class MultiCastReceiver {
 public:
     MultiCastReceiver(boost::asio::io_service& io_service,
             const boost::asio::ip::address& listen_address,
-            const boost::asio::ip::address& multicast_address);
+            const boost::asio::ip::address& multicast_address,
+            vector<int> &sensorList,
+            mutex &mutex);
     
     std::string receive();
+    void decodeMessage(string message);
 
     void handle_receive_from(const boost::system::error_code& error,
             size_t bytes_recvd);
@@ -38,6 +42,8 @@ private:
     const short multicast_port = 30001;
     const int max_length = 1024;
     char data_[1024];
+    vector<int> * sensorList = 0;
+    mutex *m;
 
 
 

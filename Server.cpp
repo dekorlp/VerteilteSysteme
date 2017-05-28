@@ -45,6 +45,9 @@ int countSocketClose = 0;
 // Sensordaten werden hier gehalten. 
 vector<Sensor*> sensorDataList;
 map<int, Sensor*> sensorActualMapList;
+vector<ProductAnswer> OrderList; 
+
+mutex m;
 
 string getActualTime() {
 
@@ -438,64 +441,58 @@ void udpSensorServerThread(char* argv) {
 void thriftThread(string multiCastAdress) {
 
 
-    cout << "THRIFT THREAD FUNCTION" << endl;
+    //cout << "THRIFT THREAD FUNCTION" << endl;
 
     boost::shared_ptr<TTransport> socket(new TSocket("localhost", 9090));
     boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
     boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
     ShopRequestClient client(protocol);
 
-    // Multicast an alle Sensoren, um diese Aufzufüllen
-
-    boost::asio::io_service io_service;
-    //MultiCastSender multiCastServer(io_service, boost::asio::ip::address::from_string(multiCastAdress));
-   // io_service.run();
-
-
-
     try {
-        transport->open();
+       
 
         while (true) {
-
+            
+            //cout<< "SENSORMAPLIST SIZE: " << sensorActualMapList.size() << endl;
             if (sensorActualMapList.size() >= 2) {
                 for (auto& s : sensorActualMapList) {
 
-                    int bestellMenge = 100 - stoi(s.second->GetSensorValue());
-                    
+                  //  int bestellMenge = 100 - stoi(s.second->GetSensorValue());
+                    //cout << "SENSORVALUES " << s.second->GetSensorValue() << endl;
                     if (stoi(s.second->GetSensorValue()) <= 20) {
-
-                        cout << "IN WHILE "<< endl;
+                        
+                        int bestellMenge = 100 - stoi(s.second->GetSensorValue());
+                        
+                        //cout << "IN THRIFT THREAD IF VALUE <= 20 "<< endl;
                         //bestellMenge =  bestellMenge;
                         ProductAnswer productAnswer;
                         int productId = stoi(s.second->GetSensorNr());
-
+                        cout << "Bestellung geht raus: " <<  s.second->GetSensorNr() << "-" << bestellMenge<<endl;
+                        transport->open();
                         client.buyProducts(productAnswer, productId, bestellMenge);
-
-                        // Broadcast data.
-                        stringstream sbuffer;
-                        sbuffer << productId;
-                        sbuffer << "#";
-                        sbuffer << bestellMenge;
-                        sbuffer << "\0";
-
-                        char cRequest[1024] = "";
-                        strcat(cRequest, sbuffer.str().c_str());
-                        size_t request_length = sbuffer.str().size();
-
-                        cout << "THRIFT THREAD !!!!!!!!!!!!!!!!!!\n\n" << sbuffer.str() << "\n" << endl;
-                        cout << "Bestellmenge :" << bestellMenge << endl;
-                        // Multicast Send_to
-                        //multiCastServer.handle_send_to(cRequest, request_length);
-                       // multiCastServer.send(sbuffer.str());
-
+                        transport->close();
+                        m.lock();
+                        //cout << "ORDER LIST SIZE BEFORE PUSH: " << OrderList.size()<< endl;
+                        
+                         bool sensorIdExistsInOrderList = false;
+                         for(ProductAnswer product : OrderList)
+                         {
+                             if(product.sensorId == productAnswer.sensorId)
+                             {
+                                 
+                             }
+                         }
+                        OrderList.push_back(productAnswer);
+                        //cout << "ORDER LIST SIZE AFTER PUSH: " << OrderList.size()<< endl;
+                        m.unlock();                     
+                        
                     }
                 }
             }
-            //sleep(3);
+            sleep(6);
         }
 
-        transport->close();
+        
     } catch (TException& tx) {
         cout << "ERROR: " << tx.what() << endl;
     }
@@ -503,13 +500,12 @@ void thriftThread(string multiCastAdress) {
 
 
 
-void refillSensor() {
-
-    
+void refillSensorThread() {    
     boost::asio::io_service io_service;
-    MultiCastSender s(io_service, boost::asio::ip::address::from_string("224.0.0.1"));
+    MultiCastSender s(io_service, boost::asio::ip::address::from_string("224.0.0.1"), OrderList, m);
     io_service.run();
-    //s.send("SCHWWWUUUUUUL");
+    
+    
     
 }
 
@@ -524,18 +520,18 @@ int main(int argc, char* argv[]) {
 
         thread t1;
         thread t2;
-        //hread t3;
+        thread t3;
         thread t4;
 
         t1 = thread(udpSensorServerThread, argv[1]);
         t2 = thread(tcpWebserverThread, argv[2]);
-        //t3 = thread(thriftThread, "224.0.0.1");
-        t4 = thread(refillSensor);
+        t3 = thread(thriftThread, "224.0.0.1");
+        t4 = thread(refillSensorThread);
 
         
         t1.join();
         t2.join();
-        //t3.join();
+        t3.join();
         t4.join();
         
 
