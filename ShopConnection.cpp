@@ -26,7 +26,7 @@ ShopConnection::ShopConnection()
 
 ShopConnection::ShopConnection(string ipAdress)
 : client(NULL){
-    socket = boost::shared_ptr<TTransport>(new TSocket("localhost", 9090));
+    socket = boost::shared_ptr<TTransport>(new TSocket(ipAdress, 9090));
     transport = boost::shared_ptr<TTransport>(new TBufferedTransport(socket));
     protocol =  boost::shared_ptr<TProtocol>(new TBinaryProtocol(transport));
     client = ShopRequestClient(protocol);

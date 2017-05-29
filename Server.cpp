@@ -535,17 +535,30 @@ int main(int argc, char* argv[]) {
     /// ShopConnection DEBUG LOCALHOST///
     //ShopConnection localhostShop("localhost");
     //shopConnections.push_back(localhostShop);
-    ShopConnection shopCon("localhost");
-    shopConnections.push_back(shopCon);
+    //ShopConnection shopCon("localhost");
+    //shopConnections.push_back(shopCon);
     /////////////////////
     
     
     try {
-        if (argc != 3) {
-            std::cerr << "Please type UDP <port> and TCP <port> vor Sensor Data, Webserver and <IP> of Sensors\n";
+        if (argc != 4 && argc != 5) {
+            std::cerr << "Please type UDP <port> (Sensor Data), TCP <port> (Webserver) and IP <shop1> and/or IP <shop2>  \n";
             return 1;
         }
 
+        if(argc == 4)
+        {
+            ShopConnection shopCon(argv[3]);
+            shopConnections.push_back(shopCon);
+            cout << "arg == 4: " <<  argv[3] << endl;
+        }
+        
+        if(argc == 5)
+        {
+            ShopConnection shopCon(argv[4]);
+            shopConnections.push_back(shopCon);
+            cout << "arg == 5: " <<  argv[4] << endl;
+        }
 
         thread t1;
         thread t2;
