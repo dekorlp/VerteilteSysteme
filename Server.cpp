@@ -29,6 +29,7 @@
 #include <boost/array.hpp>
 
 #include "gen-cpp/ShopRequest.h"
+#include "ShopConnection.h"
 
 using boost::asio::ip::udp;
 using boost::asio::ip::tcp;
@@ -46,6 +47,7 @@ int countSocketClose = 0;
 vector<Sensor*> sensorDataList;
 map<int, Sensor*> sensorActualMapList;
 vector<ProductAnswer> OrderList; 
+vector<ShopConnection> shopConnections;
 
 mutex m;
 
@@ -442,12 +444,7 @@ void thriftThread(string multiCastAdress) {
 
 
     //cout << "THRIFT THREAD FUNCTION" << endl;
-
-    boost::shared_ptr<TTransport> socket(new TSocket("localhost", 9090));
-    boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
-    boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
-    ShopRequestClient client(protocol);
-
+ 
     try {
        
 
@@ -463,14 +460,38 @@ void thriftThread(string multiCastAdress) {
                         
                         int bestellMenge = 100 - stoi(s.second->GetSensorValue());
                         
+                        
+                        
+                        
+                        
                         //cout << "IN THRIFT THREAD IF VALUE <= 20 "<< endl;
                         //bestellMenge =  bestellMenge;
                         ProductAnswer productAnswer;
                         int productId = stoi(s.second->GetSensorNr());
+                        
+                        for(int i = 0; i < shopConnections.size(); i++)
+                        {
+                            //int price = shopConnections.at(i).requestProduct(productId, bestellMenge);
+                            shopConnections.at(i).setPrice(shopConnections.at(i).requestProduct(productId, bestellMenge));
+                        }
+                        
+                        int cheapestShopIndex = 0;
+                        for(int i = 0; i < shopConnections.size(); i++)
+                        {
+                            if(shopConnections.at(cheapestShopIndex).getPrice() > shopConnections.at(i).getPrice())
+                            {
+                                cheapestShopIndex = i;
+                            }
+                        }
+                        cout << "günstigster Preis: " << shopConnections.at(cheapestShopIndex).getPrice() << endl;
+                        
                         cout << "Bestellung geht raus: " <<  s.second->GetSensorNr() << "-" << bestellMenge<<endl;
-                        transport->open();
-                        client.buyProducts(productAnswer, productId, bestellMenge);
-                        transport->close();
+                        //transport->open();
+                        //client.buyProducts(productAnswer, productId, bestellMenge);
+                        //transport->close();
+                        
+                        productAnswer = shopConnections.at(cheapestShopIndex).buyProduct(productId, bestellMenge);
+                        
                         m.lock();
                         //cout << "ORDER LIST SIZE BEFORE PUSH: " << OrderList.size()<< endl;
                         
@@ -511,6 +532,14 @@ void refillSensorThread() {
 
 int main(int argc, char* argv[]) {
 
+    /// ShopConnection DEBUG LOCALHOST///
+    //ShopConnection localhostShop("localhost");
+    //shopConnections.push_back(localhostShop);
+    ShopConnection shopCon("localhost");
+    shopConnections.push_back(shopCon);
+    /////////////////////
+    
+    
     try {
         if (argc != 3) {
             std::cerr << "Please type UDP <port> and TCP <port> vor Sensor Data, Webserver and <IP> of Sensors\n";

@@ -21,6 +21,7 @@
 class ShopRequestIf {
  public:
   virtual ~ShopRequestIf() {}
+  virtual int32_t requestProduct(const int32_t sendorId, const int32_t bestellMenge) = 0;
   virtual void buyProducts(ProductAnswer& _return, const int32_t sendorId, const int32_t bestellMenge) = 0;
   virtual void getBill(Bill& _return) = 0;
   virtual void ping() = 0;
@@ -53,6 +54,10 @@ class ShopRequestIfSingletonFactory : virtual public ShopRequestIfFactory {
 class ShopRequestNull : virtual public ShopRequestIf {
  public:
   virtual ~ShopRequestNull() {}
+  int32_t requestProduct(const int32_t /* sendorId */, const int32_t /* bestellMenge */) {
+    int32_t _return = 0;
+    return _return;
+  }
   void buyProducts(ProductAnswer& /* _return */, const int32_t /* sendorId */, const int32_t /* bestellMenge */) {
     return;
   }
@@ -62,6 +67,117 @@ class ShopRequestNull : virtual public ShopRequestIf {
   void ping() {
     return;
   }
+};
+
+typedef struct _ShopRequest_requestProduct_args__isset {
+  _ShopRequest_requestProduct_args__isset() : sendorId(false), bestellMenge(false) {}
+  bool sendorId :1;
+  bool bestellMenge :1;
+} _ShopRequest_requestProduct_args__isset;
+
+class ShopRequest_requestProduct_args {
+ public:
+
+  ShopRequest_requestProduct_args(const ShopRequest_requestProduct_args&);
+  ShopRequest_requestProduct_args& operator=(const ShopRequest_requestProduct_args&);
+  ShopRequest_requestProduct_args() : sendorId(0), bestellMenge(0) {
+  }
+
+  virtual ~ShopRequest_requestProduct_args() throw();
+  int32_t sendorId;
+  int32_t bestellMenge;
+
+  _ShopRequest_requestProduct_args__isset __isset;
+
+  void __set_sendorId(const int32_t val);
+
+  void __set_bestellMenge(const int32_t val);
+
+  bool operator == (const ShopRequest_requestProduct_args & rhs) const
+  {
+    if (!(sendorId == rhs.sendorId))
+      return false;
+    if (!(bestellMenge == rhs.bestellMenge))
+      return false;
+    return true;
+  }
+  bool operator != (const ShopRequest_requestProduct_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ShopRequest_requestProduct_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class ShopRequest_requestProduct_pargs {
+ public:
+
+
+  virtual ~ShopRequest_requestProduct_pargs() throw();
+  const int32_t* sendorId;
+  const int32_t* bestellMenge;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _ShopRequest_requestProduct_result__isset {
+  _ShopRequest_requestProduct_result__isset() : success(false) {}
+  bool success :1;
+} _ShopRequest_requestProduct_result__isset;
+
+class ShopRequest_requestProduct_result {
+ public:
+
+  ShopRequest_requestProduct_result(const ShopRequest_requestProduct_result&);
+  ShopRequest_requestProduct_result& operator=(const ShopRequest_requestProduct_result&);
+  ShopRequest_requestProduct_result() : success(0) {
+  }
+
+  virtual ~ShopRequest_requestProduct_result() throw();
+  int32_t success;
+
+  _ShopRequest_requestProduct_result__isset __isset;
+
+  void __set_success(const int32_t val);
+
+  bool operator == (const ShopRequest_requestProduct_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const ShopRequest_requestProduct_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ShopRequest_requestProduct_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _ShopRequest_requestProduct_presult__isset {
+  _ShopRequest_requestProduct_presult__isset() : success(false) {}
+  bool success :1;
+} _ShopRequest_requestProduct_presult__isset;
+
+class ShopRequest_requestProduct_presult {
+ public:
+
+
+  virtual ~ShopRequest_requestProduct_presult() throw();
+  int32_t* success;
+
+  _ShopRequest_requestProduct_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
 };
 
 typedef struct _ShopRequest_buyProducts_args__isset {
@@ -366,6 +482,9 @@ class ShopRequestClient : virtual public ShopRequestIf {
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
+  int32_t requestProduct(const int32_t sendorId, const int32_t bestellMenge);
+  void send_requestProduct(const int32_t sendorId, const int32_t bestellMenge);
+  int32_t recv_requestProduct();
   void buyProducts(ProductAnswer& _return, const int32_t sendorId, const int32_t bestellMenge);
   void send_buyProducts(const int32_t sendorId, const int32_t bestellMenge);
   void recv_buyProducts(ProductAnswer& _return);
@@ -390,12 +509,14 @@ class ShopRequestProcessor : public ::apache::thrift::TDispatchProcessor {
   typedef  void (ShopRequestProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
   typedef std::map<std::string, ProcessFunction> ProcessMap;
   ProcessMap processMap_;
+  void process_requestProduct(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_buyProducts(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_getBill(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_ping(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   ShopRequestProcessor(boost::shared_ptr<ShopRequestIf> iface) :
     iface_(iface) {
+    processMap_["requestProduct"] = &ShopRequestProcessor::process_requestProduct;
     processMap_["buyProducts"] = &ShopRequestProcessor::process_buyProducts;
     processMap_["getBill"] = &ShopRequestProcessor::process_getBill;
     processMap_["ping"] = &ShopRequestProcessor::process_ping;
@@ -427,6 +548,15 @@ class ShopRequestMultiface : virtual public ShopRequestIf {
     ifaces_.push_back(iface);
   }
  public:
+  int32_t requestProduct(const int32_t sendorId, const int32_t bestellMenge) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->requestProduct(sendorId, bestellMenge);
+    }
+    return ifaces_[i]->requestProduct(sendorId, bestellMenge);
+  }
+
   void buyProducts(ProductAnswer& _return, const int32_t sendorId, const int32_t bestellMenge) {
     size_t sz = ifaces_.size();
     size_t i = 0;
@@ -486,6 +616,9 @@ class ShopRequestConcurrentClient : virtual public ShopRequestIf {
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
+  int32_t requestProduct(const int32_t sendorId, const int32_t bestellMenge);
+  int32_t send_requestProduct(const int32_t sendorId, const int32_t bestellMenge);
+  int32_t recv_requestProduct(const int32_t seqid);
   void buyProducts(ProductAnswer& _return, const int32_t sendorId, const int32_t bestellMenge);
   int32_t send_buyProducts(const int32_t sendorId, const int32_t bestellMenge);
   void recv_buyProducts(ProductAnswer& _return, const int32_t seqid);

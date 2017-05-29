@@ -38,6 +38,29 @@ public:
     ShopRequestHandler() {
         // Your initialization goes here
     }
+    
+    int32_t requestProduct(const int32_t sendorId, const int32_t bestellMenge) {
+        // Your implementation goes here
+        int price;
+
+        switch (sendorId) {
+            case(0):
+                        price = sensorPrice1;
+                break;
+            case(1):
+                        price = sensorPrice2;
+                break;
+            case(2):
+                        price = sensorPrice3;
+                break;
+            case(3):
+                        price = sensorPrice4;
+        }
+        
+        printf("requestProduct\n");
+        
+        return price;
+    }
 
     void buyProducts(ProductAnswer& _return, const int32_t sendorId, const int32_t bestellMenge) {
         // Your implementation goes here

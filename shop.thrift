@@ -14,6 +14,7 @@ struct Bill {
 
 service ShopRequest {
 
+    i32 requestProduct(1:i32 sendorId, 2:i32 bestellMenge),
     ProductAnswer buyProducts(1:i32 sendorId, 2:i32 bestellMenge),
     Bill getBill(),
     void ping()

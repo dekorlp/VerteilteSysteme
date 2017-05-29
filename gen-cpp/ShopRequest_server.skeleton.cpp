@@ -20,6 +20,11 @@ class ShopRequestHandler : virtual public ShopRequestIf {
     // Your initialization goes here
   }
 
+  int32_t requestProduct(const int32_t sendorId, const int32_t bestellMenge) {
+    // Your implementation goes here
+    printf("requestProduct\n");
+  }
+
   void buyProducts(ProductAnswer& _return, const int32_t sendorId, const int32_t bestellMenge) {
     // Your implementation goes here
     printf("buyProducts\n");
