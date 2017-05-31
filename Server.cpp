@@ -91,6 +91,18 @@ string includeSensorHistory(vector<Sensor *> vectorList) {
     return s;
 }
 
+string includeShopBills(vector<ProductAnswer> productList)
+{
+    std::stringstream ss;
+    for(ProductAnswer product : productList)
+    { 
+        ss << "<p>";
+        ss << "Sensor Nr. [" << product.sensorId << "]" << "\t Menge = " << product.menge << "\t Preis ="<<product.preis;
+        ss << "<p>\n";
+    }
+    return ss.str();
+}
+
 const char * sendHTTPSite(string site) {
 
     ///////////////////////////////////////////////////////////
@@ -103,6 +115,50 @@ const char * sendHTTPSite(string site) {
     if (site.size() <= 3) {
         site = "zentrale_haupt";
     }
+    
+    
+    // prüfen ob ein Attribut angehängt ist : z.B: ?value=1 
+    // wird benötigt für die Seite shop_nachbestellen
+    if(site.find('?', 0) != -1 )
+    {
+        string option = "";
+        //option = site.substr(site.find('?', 0), site.find(' ', 0) - site.find('?', 0));
+        option = site.substr(site.find('=', 0)+1, site.find(' ', 0) - site.find('=', 0));
+        site.erase(site.find('?', 0), site.find(' ', 0) - site.find('?', 0));
+        cout << "? gefunden -> ausgabe " << option << endl;
+        int productId = stoi(option)-1;
+        
+        ProductAnswer productAnswer;
+
+        for(int i = 0; i < shopConnections.size(); i++)
+        {
+            //int price = shopConnections.at(i).requestProduct(productId, bestellMenge);
+            shopConnections.at(i).setPrice(shopConnections.at(i).requestProduct(productId, 100));
+        }
+
+        int cheapestShopIndex = 0;
+        for(int i = 0; i < shopConnections.size(); i++)
+        {
+            if(shopConnections.at(cheapestShopIndex).getPrice() > shopConnections.at(i).getPrice())
+            {
+                cheapestShopIndex = i;
+            }
+        }
+        cout << "günstigster Preis: " << shopConnections.at(cheapestShopIndex).getPrice() << endl;
+
+        cout << "Bestellung geht raus: " <<  productId << "-" << 100<<endl;
+        //transport->open();
+        //client.buyProducts(productAnswer, productId, bestellMenge);
+        //transport->close();
+
+        productAnswer = shopConnections.at(cheapestShopIndex).buyProduct(productId, 100);
+        
+        m.lock();                
+        OrderList.push_back(productAnswer);
+        m.unlock();   
+    }
+        
+    cout << site << endl;
     // HTML Body wird dynamisch gefuellt.
     string htmlBody = "";
     ifstream myfile(site, ifstream::in);
@@ -120,6 +176,16 @@ const char * sendHTTPSite(string site) {
                 htmlBody += includeActualSensorData(sensorActualMapList);
             } else if (line.find("<!--sensor_history-->", 0) != -1) {
                 htmlBody += includeSensorHistory(sensorDataList);
+            } else if(line.find("<!--shop_bestellungen-->") != -1) {
+                // alle Läden durchgehen und die Produktbestellungen ausgeben
+                for(ShopConnection shopCon : shopConnections)
+                {
+                    htmlBody = shopCon.getIpAdress() + "\n";
+                    cout << shopCon.getIpAdress()<< endl;;
+                    vector<ProductAnswer> products = shopCon.getBill().produkte;
+                    htmlBody += includeShopBills(products);
+                    htmlBody += "\n\n";
+                }
             }
         }
         myfile.close();

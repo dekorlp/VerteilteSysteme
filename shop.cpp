@@ -32,6 +32,8 @@ int sensorPrice2 = 5;
 int sensorPrice3 = 3;
 int sensorPrice4 = 4;
 
+Bill bill;
+
 class ShopRequestHandler : virtual public ShopRequestIf {
 public:
 
@@ -65,6 +67,7 @@ public:
         // Your implementation goes here
 
         ProductAnswer pA;
+     
 
         pA.sensorId = sendorId;
         pA.menge = bestellMenge;
@@ -82,6 +85,7 @@ public:
                         pA.preis = sensorPrice4;
         }
 
+        bill.produkte.push_back(pA);
         _return = pA;
         
         printf("buyProducts\n");
@@ -89,6 +93,7 @@ public:
 
     void getBill(Bill& _return) {
         // Your implementation goes here
+        _return = bill;
         printf("getBill\n");
     }
 

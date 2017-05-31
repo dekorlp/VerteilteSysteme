@@ -31,6 +31,7 @@ class ShopConnection
         boost::shared_ptr<TTransport> transport;
         boost::shared_ptr<TProtocol> protocol;
         ShopRequestClient client;
+        string ipAdress;
         
         //ShopRequestClient client;
         int price;
@@ -39,6 +40,8 @@ class ShopConnection
         ShopConnection(string ipAdress);
         int requestProduct(int productId, int bestellMenge);
         ProductAnswer buyProduct(int productId, int bestellMenge);
+        Bill getBill(); 
+        string getIpAdress();
         void setPrice(int price);
         int getPrice();
 };

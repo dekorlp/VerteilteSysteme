@@ -30,6 +30,7 @@ ShopConnection::ShopConnection(string ipAdress)
     transport = boost::shared_ptr<TTransport>(new TBufferedTransport(socket));
     protocol =  boost::shared_ptr<TProtocol>(new TBinaryProtocol(transport));
     client = ShopRequestClient(protocol);
+    this->ipAdress = ipAdress;
 }
 
 int ShopConnection::requestProduct(int productId, int bestellMenge)
@@ -49,6 +50,21 @@ ProductAnswer ShopConnection::buyProduct(int productId, int bestellMenge)
     client.buyProducts(answer, productId, bestellMenge);
     transport->close();
     return answer;
+}
+
+string ShopConnection::getIpAdress()
+{
+    return ipAdress;
+}
+
+Bill ShopConnection::getBill()
+{
+    Bill bill;
+    
+    transport->open();
+    client.getBill(bill);
+    transport->close();
+    return bill;
 }
 
 void ShopConnection::setPrice(int price)

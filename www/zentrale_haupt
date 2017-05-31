@@ -9,11 +9,13 @@
     <header>
         <h1>Kühlschrank Zentrale</h1>
     </header>
-    <p>Wählen Sie eines der folgenden 2 Punkten aus: </p>
+    <p>Wählen Sie eines der folgenden 4 Punkten aus: </p>
     <nav>
       <ul>
         <li><a href="sensoren_akt_status">Aktuelle Sensor Status</a></li>
         <li><a href="sensoren_historie">Sensor Historie</a></li>
+	<li><a href="shop_bestellungen">Bestellungs Historie</a></li>
+	<li><a href="shop_nachbestellen">Bestellung aufgeben</a></li>
       </ul>
     </nav> 
     <footer>
