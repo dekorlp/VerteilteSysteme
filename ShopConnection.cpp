@@ -9,6 +9,7 @@
 #include <thrift/transport/TTransportUtils.h>
 #include <boost/array.hpp>
 #include <string>
+#include <iostream>
 
 
 #include"ShopConnection.h"
@@ -19,6 +20,7 @@
 ShopConnection::ShopConnection()
    : client( NULL )
 {
+    
     this->socket = nullptr;
     this->transport = nullptr;
     this->protocol = nullptr;
@@ -26,6 +28,8 @@ ShopConnection::ShopConnection()
 
 ShopConnection::ShopConnection(string ipAdress)
 : client(NULL){
+    std::cout << "SHOP CONNECTION KONSTRUKTOR : IP: " << ipAdress<< std::endl;
+    
     socket = boost::shared_ptr<TTransport>(new TSocket(ipAdress, 9090));
     transport = boost::shared_ptr<TTransport>(new TBufferedTransport(socket));
     protocol =  boost::shared_ptr<TProtocol>(new TBinaryProtocol(transport));

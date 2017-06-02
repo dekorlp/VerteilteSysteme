@@ -137,10 +137,12 @@ const char * sendHTTPSite(string site) {
         }
 
         int cheapestShopIndex = 0;
-        for(int i = 0; i < shopConnections.size(); i++)
+        for(int i = 1; i < shopConnections.size(); i++)
         {
+             cout << "HALLE WELT Button for if" << endl;
             if(shopConnections.at(cheapestShopIndex).getPrice() > shopConnections.at(i).getPrice())
             {
+                 cout << "HALLE WELT BUTTON" << endl;
                 cheapestShopIndex = i;
             }
         }
@@ -529,34 +531,56 @@ void thriftThread(string multiCastAdress) {
                         
                         
                         
-                        
+                        cout << "HALLE WELT Thrift" << endl;
                         //cout << "IN THRIFT THREAD IF VALUE <= 20 "<< endl;
                         //bestellMenge =  bestellMenge;
                         ProductAnswer productAnswer;
                         int productId = stoi(s.second->GetSensorNr());
                         
+                        cout << shopConnections.size() << " :SIZE SHOP ONNECTIONS" << endl;
                         for(int i = 0; i < shopConnections.size(); i++)
                         {
+                            cout << "SET PRICE " << endl;
                             //int price = shopConnections.at(i).requestProduct(productId, bestellMenge);
                             shopConnections.at(i).setPrice(shopConnections.at(i).requestProduct(productId, bestellMenge));
                         }
                         
+                        /*cout << "vor for shleife" << endl;
                         int cheapestShopIndex = 0;
                         for(int i = 0; i < shopConnections.size(); i++)
                         {
+                            //cout << shopConnections.at(cheapestShopIndex).getPrice() << " > " <<  shopConnections.at(i).getPrice()<< endl;
                             if(shopConnections.at(cheapestShopIndex).getPrice() > shopConnections.at(i).getPrice())
                             {
                                 cheapestShopIndex = i;
+                              //  cout << i << endl;
                             }
+                        }*/
+                       // cout << "günstig" << endl;
+                        cout << shopConnections.at(0).getPrice() << " < " <<  shopConnections.at(1).getPrice() << endl;
+                        if(shopConnections.at(0).getPrice() < shopConnections.at(1).getPrice())
+                        {
+                            cout << "0 ist günstiger" << endl;
+                            cout << "günstigster Preis: " << shopConnections.at(0).getPrice() << endl;
+                            cout << "Bestellung geht raus: " <<  s.second->GetSensorNr() << "-" << bestellMenge<<endl;
+                            productAnswer = shopConnections.at(0).buyProduct(productId, bestellMenge);
                         }
-                        cout << "günstigster Preis: " << shopConnections.at(cheapestShopIndex).getPrice() << endl;
+                        else
+                        {
+                            cout << "1 ist günstiger" << endl;
+                            cout << "günstigster Preis: " << shopConnections.at(1).getPrice() << endl;
+                            cout << "Bestellung geht raus: " <<  s.second->GetSensorNr() << "-" << bestellMenge<<endl;
+                            productAnswer = shopConnections.at(1).buyProduct(productId, bestellMenge);
+                        }
                         
-                        cout << "Bestellung geht raus: " <<  s.second->GetSensorNr() << "-" << bestellMenge<<endl;
+                        
+                        
+                        //cout << "Bestellung geht raus: " <<  s.second->GetSensorNr() << "-" << bestellMenge<<endl;
                         //transport->open();
                         //client.buyProducts(productAnswer, productId, bestellMenge);
                         //transport->close();
                         
-                        productAnswer = shopConnections.at(cheapestShopIndex).buyProduct(productId, bestellMenge);
+                        //productAnswer = shopConnections.at(cheapestShopIndex).buyProduct(productId, bestellMenge);
                         
                         m.lock();
                         //cout << "ORDER LIST SIZE BEFORE PUSH: " << OrderList.size()<< endl;
@@ -598,6 +622,7 @@ void refillSensorThread() {
 
 int main(int argc, char* argv[]) {
 
+    cout << "DIESES PROJEKT" << endl;
     /// ShopConnection DEBUG LOCALHOST///
     //ShopConnection localhostShop("localhost");
     //shopConnections.push_back(localhostShop);
@@ -621,6 +646,10 @@ int main(int argc, char* argv[]) {
         
         if(argc == 5)
         {
+            ShopConnection shopCon1(argv[3]);
+            shopConnections.push_back(shopCon1);
+            cout << "arg == 4: " <<  argv[3] << endl;
+            
             ShopConnection shopCon(argv[4]);
             shopConnections.push_back(shopCon);
             cout << "arg == 5: " <<  argv[4] << endl;

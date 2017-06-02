@@ -60,7 +60,7 @@ public:
         }
         
         printf("requestProduct\n");
-        
+        return price;
     }
 
     void buyProducts(ProductAnswer& _return, const int32_t sendorId, const int32_t bestellMenge) {
@@ -85,6 +85,7 @@ public:
                         pA.preis = sensorPrice4;
         }
 
+       
         bill.produkte.push_back(pA);
         _return = pA;
         
