@@ -22,7 +22,6 @@ timer_(io_service),
 message_count_(0) {
     this->orderList = &orderList;
     this->m = &mutex;
-    cout << "SCHEIS KONSTRUKTOR" << endl;
 
      boost::system::error_code ec;
     
