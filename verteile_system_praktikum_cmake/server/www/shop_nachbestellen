@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nachbestellen </title>
+  </head>
+  <body>
+    <header>
+        <h1>Nachbestellen</h1>
+    </header>
+    <p>Nachbestellen: </p>
+	<form method="get" action="shop_nachbestellen">
+		<input type="submit" value="1" name="sensor"/> <!-- Ware im Sensor 1 auffüllen-->
+		<input type="submit" value="2" name="sensor"/> <!-- Ware im Sensor 2 auffüllen-->
+		<input type="submit" value="3" name="sensor"/> <!-- Ware im Sensor 3 auffüllen-->
+		<input type="submit" value="4" name="sensor"/> <!-- Ware im Sensor 4 auffüllen-->
+	</form>
+
+    <nav>
+      <ul>
+        <li><a href="zentrale_haupt">Zurück zur Hauptseite</a></li>
+      </ul>
+    </nav> 
+    <footer>
+      <p>© 2017 by Denis Köhler & Michael Klimek</p>
+    </footer>
+  </body>
+</html>
