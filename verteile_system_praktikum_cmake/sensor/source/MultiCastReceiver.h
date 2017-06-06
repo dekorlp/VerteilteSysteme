@@ -50,4 +50,3 @@ private:
 };
 
 #endif /* MULTICASTRECEIVER_H */
-

@@ -39,4 +39,3 @@ private:
 };
 
 #endif /* SENSOR_H */
-

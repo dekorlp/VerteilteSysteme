@@ -1,1 +1,0 @@
-/usr/bin/c++    -rdynamic CMakeFiles/Shop.dir/source/shop.cpp.o CMakeFiles/Shop.dir/gen-cpp/shop_constants.cpp.o CMakeFiles/Shop.dir/gen-cpp/ShopRequest.cpp.o CMakeFiles/Shop.dir/gen-cpp/shop_types.cpp.o  -o Shop -lthrift -lthriftnb -levent -pthread -lpthread -lboost_system -lboost_thread 

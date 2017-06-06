@@ -22,7 +22,6 @@ timer_(io_service),
 message_count_(0) {
     this->orderList = &orderList;
     this->m = &mutex;
-    cout << "SCHEIS KONSTRUKTOR" << endl;
 
      boost::system::error_code ec;
     
@@ -72,7 +71,6 @@ string MultiCastSender::encodeMessage(ProductAnswer productAnswer) {
     /* char cRequest[1024] = "";
      strcat(cRequest, sbuffer.str().c_str());
      size_t request_length = sbuffer.str().size();
-
      cout << "THRIFT THREAD !!!!!!!!!!!!!!!!!!\n\n" << sbuffer.str() << "\n" << endl;
      cout << "Bestellmenge :" << bestellMenge << endl;*/
 
