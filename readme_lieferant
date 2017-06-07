@@ -1,0 +1,13 @@
+Installation Paho Library:
+1. in den Repository Ordner wechseln
+2. git clone https://github.com/eclipse/paho.mqtt.c.git
+3. cd paho.mqtt.c
+4. make
+5. sudo make install
+6. Im Projekt Lieferant den korrekten Pfad zu den Bibliotheken angeben: 
+
+    libmqttv3a.so - asynchronous
+    libmqttv3as.so - asynchronous with SSL
+    libmqttv3c.so - "classic" / synchronous
+    libmqttv3cs.so - "classic" / synchronous with SSL
+
