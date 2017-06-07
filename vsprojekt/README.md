@@ -1,2 +1,0 @@
-# Verteilte_Systeme_Praktikum_SoSe17
-Verteilte Systeme Praktikum
