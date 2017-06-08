@@ -132,7 +132,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
         std::cout << "Nachfrage/Produzent/Milch" << sMessage << std::endl;
-        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
         
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Käse"))
@@ -142,7 +142,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
         std::cout << "Nachfrage/Produzent/Käse" << std::endl;
-        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Cola"))
     {
@@ -151,7 +151,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
         std::cout << "Nachfrage/Produzent/Cola" << std::endl;
-        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Fleisch"))
     {
@@ -160,7 +160,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
         std::cout << "Nachfrage/Produzent/Fleisch" << std::endl;
-        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Milch"))
     {
@@ -194,10 +194,10 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         
         std::cout << "Fleisch: " << menge << " für "<< preis << std::endl;
     }
-    std::cout << std::endl << std::endl;
-    std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
-    std::cout << "message: ";
-    std::cout << (char*)message->payload<<std::endl;
+    //std::cout << std::endl << std::endl;
+    //std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
+    //std::cout << "message: ";
+    //std::cout << (char*)message->payload<<std::endl;
     
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);

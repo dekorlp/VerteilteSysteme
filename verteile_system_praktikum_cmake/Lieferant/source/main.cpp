@@ -35,23 +35,24 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     if(topicName == std::string("Nachfrage/Produzent/Milch"))
     {
         std::cout << "Nachfrage/Produzent/Milch" << sMessage << std::endl;
-        mqtt->publish("14#Bestellung/Produzent/Milchmeister/Milch", sMessage.c_str(), 1, onPublishSucceded);
+        // preis#Topic
+        mqtt->publish(std::string("14#Bestellung/Produzent/"+id+ "/Milch").c_str(), sMessage.c_str(), 1, onPublishSucceded);
         
     }
     else if(topicName == std::string("Nachfrage/Produzent/Käse"))
     {
         std::cout << "Nachfrage/Produzent/Käse" << std::endl;
-        mqtt->publish("20#Bestellung/Produzent/Milchmeister/Milch", sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("20#Bestellung/Produzent/"+id+ "/Käse").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Produzent/Cola"))
     {
         std::cout << "Nachfrage/Produzent/Cola" << std::endl;
-        mqtt->publish("30#Bestellung/Produzent/Milchmeister/Milch", sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("30#Bestellung/Produzent/"+id+ "/Cola").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Produzent/Fleisch"))
     {
         std::cout << "Nachfrage/Produzent/Fleisch" << std::endl;
-        mqtt->publish("40#Bestellung/Produzent/Milchmeister/Milch", sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("40#Bestellung/Produzent/"+id+ "/Fleisch").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Bestellung/Produzent/"+id+ "/Milch"))
     {
@@ -73,10 +74,10 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::cout << "Bestellung/Produzent/Fleisch" << std::endl;
         mqtt->publish("20#40", sMessage.c_str(), 1, onPublishSucceded);
     }
-    std::cout << std::endl << std::endl;
-    std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
-    std::cout << "message: ";
-    std::cout << (char*)message->payload<<std::endl;
+    //std::cout << std::endl << std::endl;
+    //std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
+    //std::cout << "message: ";
+    //std::cout << (char*)message->payload<<std::endl;
     
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
