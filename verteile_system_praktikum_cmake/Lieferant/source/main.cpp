@@ -17,10 +17,7 @@ void connlost(void *context, char *cause)
         int rc;
 
         std::cout << std::endl << "Connection lost" << std::endl << "   cause: " << cause << std::endl;
-        //printf("\nConnection lost\n");
-        //printf("     cause: %s\n", cause);
 
-        //printf("Reconnecting\n");
         conn_opts.keepAliveInterval = 20;
         conn_opts.cleansession = 1;
         if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS)
@@ -35,14 +32,11 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     int i;
     char* payloadptr;
 
+    std::cout << std::endl << std::endl;
     std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
     std::cout << "message: ";
-    payloadptr = (char*) message->payload;
-    for(i=0; i<message->payloadlen; i++)
-    {
-        putchar(*payloadptr++);
-    }
-    putchar('\n');
+    std::cout << (char*)message->payload<<std::endl;
+    
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
     return 1;
@@ -89,15 +83,17 @@ int main ()
 {
     
     Mqtt *mqtt = new Mqtt("tcp://192.168.56.3:1883", "12345567", connlost, msgarrvd, onConnect, onConnectFailure);
-    //mqtt.connect();
-    
+
     while(!isConnected); // warte bis Verbindung aufgebaut ist
-    
-    mqtt->subscribe("hda/test", 1, onSubscribeFailure, onSubscribe);
     
     int ch;
     do 
     {
+        if(ch == 's' || ch == 's')
+        {
+            mqtt->subscribe("hda/test", 1, onSubscribeFailure, onSubscribe);
+        }
+        
         if(ch == 'p' || ch == 'P')
         {
             mqtt->publish("Meine Nachricht", "hda/test", 1, onPublishSucceded);
