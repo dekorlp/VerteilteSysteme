@@ -14,25 +14,24 @@
 #ifndef MQTT_H
 #define MQTT_H
 
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
 #include "../mqtt/MQTTAsync.h"
-#include "unistd.h"
-#include <thread>
+#include <iostream>
 
-void onConnectFailure(void* context, MQTTAsync_failureData* response);
-void onConnect(void* context, MQTTAsync_successData* response);
-void connlost(void *context, char *cause);
-int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message);
-
+void onSubscribe(void* context, MQTTAsync_successData* response);
+void onSubscribeFailure(void* context, MQTTAsync_failureData* response);
 
 class Mqtt
 {
     private:
        MQTTAsync client; 
+       volatile MQTTAsync_token deliveredtoken;
+       char* id;
     public:
-        void connect(const char *address, const char * id);
+        Mqtt(const char *address, const char * id, void (*onConnectionLostHandler)(void*, char*), int (*onMessageReceivedHandler)(void*, char*, int, MQTTAsync_message*), void (*onConnectHandler)(void*, MQTTAsync_successData*),
+        void (*onConnectFailureHandler)(void*, MQTTAsync_failureData*));
+        void connect(const char *address, const char * id, void (*onConnectionLostHandler)(void*, char*), int (*onMessageReceivedHandler)(void*, char*, int, MQTTAsync_message*), void (*onConnectHandler)(void*, MQTTAsync_successData*),
+        void (*onConnectFailureHandler)(void*, MQTTAsync_failureData*));
+        void subscribe(const char* topic, int qos, void (*onSubscribeFailureHandler)(void* context, MQTTAsync_failureData* response), void (*onSubscribeSucceededHandler)(void* context, MQTTAsync_successData* response));
         
 };
 
