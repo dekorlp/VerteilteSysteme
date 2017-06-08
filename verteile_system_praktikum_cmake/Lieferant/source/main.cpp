@@ -70,6 +70,11 @@ void onSubscribe(void* context, MQTTAsync_successData* response)
     std::cout << "Subscribe succeeded!" <<std::endl<<std::endl;
 }
 
+void onUnSubscribe(void* context, MQTTAsync_successData* response)
+{
+    std::cout << "Unsubscribe succeeded!" <<std::endl<<std::endl;
+}
+
 void onSubscribeFailure(void* context, MQTTAsync_failureData* response)
 {
     std::cout << "Subscribe failed, rc: " << (response ? response->code : 0) <<std::endl<<std::endl;
@@ -96,6 +101,11 @@ int main ()
         if(ch == 'p' || ch == 'P')
         {
             mqtt->publish("Meine Nachricht", "hda/test", 1, onPublishSucceded);
+        }
+        
+        if(ch == 'u' || ch == 'U')
+        {
+            mqtt->unsubscribe("hda/test", onUnSubscribe);
         }
         
         ch = getchar();

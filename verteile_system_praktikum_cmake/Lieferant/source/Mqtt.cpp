@@ -63,6 +63,29 @@ void Mqtt::subscribe(const char* topic, int qos, void (*onSubscribeFailureHandle
     }
 }
 
+void Mqtt::unsubscribe(const char* topic, void (*onUnSubscribeSuccededHandler)(void* context, MQTTAsync_successData* response))
+{
+    int rc;
+    //MQTTAsync client = (MQTTAsync)context;
+        MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
+        //MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
+    
+    
+     //printf("Subscribing to topic %s\nfor client %s using QoS%d\n\n"
+     //      "Press Q<Enter> to quit\n\n", topic, id, qos);
+    opts.onSuccess = onUnSubscribeSuccededHandler;
+    opts.context = client;
+
+    deliveredtoken = 0;
+    
+    if ((rc = MQTTAsync_unsubscribe(client, topic, &opts)) != MQTTASYNC_SUCCESS)
+    {
+        std::cout << "Failed to start unsubscribe, return code: "<< rc << std::endl;
+        //printf("Failed to start subscribe, return code %d\n", rc);
+        exit(-1);       
+    }
+}
+
 void Mqtt::publish(const char* message, const char* topic, int qos, void (*onPublishSuccededHandler)(void* context, MQTTAsync_successData* response))
 {
     MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
