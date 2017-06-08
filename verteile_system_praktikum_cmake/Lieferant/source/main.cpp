@@ -17,7 +17,7 @@ extern bool isDisconnected;
 
 std::string id = "Milchbauer";
 std::list<std::string> subscriptedTopicsList;
-
+Mqtt *mqtt;
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
 {
@@ -26,27 +26,53 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     bestellungMilchStringBuilder << "Bestellung/Produzent/" << id << "/Milch";
    
     char* cMessage;
-    cMessage = (char*)calloc( length+1, sizeof(char));
+    cMessage = (char*)calloc( length, sizeof(char));
     strcpy( cMessage, (char*)message->payload);
-    cMessage[length+1] = '\0';
+    cMessage[length] = '\0';
+    
+    std::string sMessage = std::string(cMessage);
     
     if(topicName == std::string("Nachfrage/Produzent/Milch"))
     {
-        std::cout << "Nachfrage/Produzent/Milch" << cMessage << std::endl;
+        std::cout << "Nachfrage/Produzent/Milch" << sMessage << std::endl;
+        mqtt->publish("14#Bestellung/Produzent/Milchmeister/Milch", sMessage.c_str(), 1, onPublishSucceded);
+        
     }
     else if(topicName == std::string("Nachfrage/Produzent/Käse"))
     {
         std::cout << "Nachfrage/Produzent/Käse" << std::endl;
+        mqtt->publish("20#Bestellung/Produzent/Milchmeister/Milch", sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Produzent/Cola"))
     {
         std::cout << "Nachfrage/Produzent/Cola" << std::endl;
+        mqtt->publish("30#Bestellung/Produzent/Milchmeister/Milch", sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Produzent/Fleisch"))
     {
         std::cout << "Nachfrage/Produzent/Fleisch" << std::endl;
+        mqtt->publish("40#Bestellung/Produzent/Milchmeister/Milch", sMessage.c_str(), 1, onPublishSucceded);
     }
-    
+    else if(topicName == std::string("Bestellung/Produzent/"+id+ "/Milch"))
+    {
+        std::cout << "Bestellung/Produzent/"+id+ "/Käse" << std::endl;
+        mqtt->publish("20#14", sMessage.c_str(), 1, onPublishSucceded);
+    }
+    else if(topicName == std::string("Bestellung/Produzent/"+id+ "/Käse"))
+    {
+        std::cout << "Bestellung/Produzent/Cola" << std::endl;
+        mqtt->publish("20#20", sMessage.c_str(), 1, onPublishSucceded);
+    }
+    else if(topicName == std::string("Bestellung/Produzent/"+id+ "/Cola"))
+    {
+        std::cout << "Bestellung/Produzent/Fleisch" << std::endl;
+        mqtt->publish("20#30", sMessage.c_str(), 1, onPublishSucceded);
+    }
+    else if(topicName == std::string("Bestellung/Produzent/"+id+ "/Fleisch"))
+    {
+        std::cout << "Bestellung/Produzent/Fleisch" << std::endl;
+        mqtt->publish("20#40", sMessage.c_str(), 1, onPublishSucceded);
+    }
     std::cout << std::endl << std::endl;
     std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
     std::cout << "message: ";
@@ -65,16 +91,18 @@ int main ()
     std::string ipAdresse = "tcp://192.168.56.3:1883";
     
     
-    Mqtt *mqtt = new Mqtt(ipAdresse.c_str(), id.c_str(), connlost, msgarrvd, onConnect, onConnectFailure);    
+    mqtt = new Mqtt(ipAdresse.c_str(), id.c_str(), connlost, msgarrvd, onConnect, onConnectFailure);    
     while(!isConnected); // warte bis Verbindung aufgebaut ist
-    
-    std::stringstream bestellungMilchStringBuilder;
-    bestellungMilchStringBuilder << "Bestellung/Produzent/" << id << "/Milch";
     
     mqtt->subscribe("Nachfrage/Produzent/Milch", 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe("Nachfrage/Produzent/Käse", 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe("Nachfrage/Produzent/Cola", 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe("Nachfrage/Produzent/Fleisch", 1, onSubscribeFailure, onSubscribe);
+    std::cout << "Besellung/Produzent/"+id+ "/Milch" << std::endl;
+    mqtt->subscribe(std::string("Bestellung/Produzent/"+id+ "/Milch").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Bestellung/Produzent/"+id+ "/Käse").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Bestellung/Produzent/"+id+ "/Cola").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Bestellung/Produzent/"+id+ "/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
     
     int ch;
     do 
