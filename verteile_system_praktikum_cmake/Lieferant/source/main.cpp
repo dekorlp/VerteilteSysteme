@@ -5,33 +5,48 @@
  */
 
 #include "Mqtt.h"
+#include "MqttHandler.h"
 #include <iostream>
+#include <sstream>
+#include <map>
+#include <list>
+#include <string.h>
 
-bool isConnected = false;
-bool isDisconnected = false;
+extern bool isConnected;
+extern bool isDisconnected;
 
-void connlost(void *context, char *cause)
-{
-        MQTTAsync client = (MQTTAsync)context;
-        MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
-        int rc;
-
-        std::cout << std::endl << "Connection lost" << std::endl << "   cause: " << cause << std::endl;
-
-        conn_opts.keepAliveInterval = 20;
-        conn_opts.cleansession = 1;
-        if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS)
-        {
-            std::cout << "Failed to start connect, return code: "<< rc << std::endl;
-        }
-}
+std::string id = "Milchbauer";
+std::list<std::string> subscriptedTopicsList;
 
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
 {
-    int i;
-    char* payloadptr;
-
+    int length = message->payloadlen;
+    std::stringstream bestellungMilchStringBuilder;
+    bestellungMilchStringBuilder << "Bestellung/Produzent/" << id << "/Milch";
+   
+    char* cMessage;
+    cMessage = (char*)calloc( length+1, sizeof(char));
+    strcpy( cMessage, (char*)message->payload);
+    cMessage[length+1] = '\0';
+    
+    if(topicName == std::string("Nachfrage/Produzent/Milch"))
+    {
+        std::cout << "Nachfrage/Produzent/Milch" << cMessage << std::endl;
+    }
+    else if(topicName == std::string("Nachfrage/Produzent/Käse"))
+    {
+        std::cout << "Nachfrage/Produzent/Käse" << std::endl;
+    }
+    else if(topicName == std::string("Nachfrage/Produzent/Cola"))
+    {
+        std::cout << "Nachfrage/Produzent/Cola" << std::endl;
+    }
+    else if(topicName == std::string("Nachfrage/Produzent/Fleisch"))
+    {
+        std::cout << "Nachfrage/Produzent/Fleisch" << std::endl;
+    }
+    
     std::cout << std::endl << std::endl;
     std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
     std::cout << "message: ";
@@ -42,49 +57,24 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     return 1;
 }
 
-void onConnectFailure(void* context, MQTTAsync_failureData* response)
-{
-    std::cout << "Connect failed, rc" << (response ? response->code : 0) <<std::endl<<std::endl;
-}
 
-void onConnect(void* context, MQTTAsync_successData* response)
-{
-    std::cout << "Succesfull connection!" <<std::endl;
-    isConnected = true;
-}
 
-void onDisconnect(void* context, MQTTAsync_successData* response)
-{
-    std::cout << "Successful disconnection"<<std::endl;
-    isDisconnected = true;
-}
-
-void onSubscribe(void* context, MQTTAsync_successData* response)
-{
-    std::cout << "Subscribe succeeded!" <<std::endl<<std::endl;
-}
-
-void onUnSubscribe(void* context, MQTTAsync_successData* response)
-{
-    std::cout << "Unsubscribe succeeded!" <<std::endl<<std::endl;
-}
-
-void onSubscribeFailure(void* context, MQTTAsync_failureData* response)
-{
-    std::cout << "Subscribe failed, rc: " << (response ? response->code : 0) <<std::endl<<std::endl;
-}
-
-void onPublishSucceded(void* context, MQTTAsync_successData* response)
-{
-        printf("Successful published\n");
-}
 
 int main ()
 {
+    std::string ipAdresse = "tcp://192.168.56.3:1883";
     
-    Mqtt *mqtt = new Mqtt("tcp://192.168.56.3:1883", "12345567", connlost, msgarrvd, onConnect, onConnectFailure);
-
+    
+    Mqtt *mqtt = new Mqtt(ipAdresse.c_str(), id.c_str(), connlost, msgarrvd, onConnect, onConnectFailure);    
     while(!isConnected); // warte bis Verbindung aufgebaut ist
+    
+    std::stringstream bestellungMilchStringBuilder;
+    bestellungMilchStringBuilder << "Bestellung/Produzent/" << id << "/Milch";
+    
+    mqtt->subscribe("Nachfrage/Produzent/Milch", 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe("Nachfrage/Produzent/Käse", 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe("Nachfrage/Produzent/Cola", 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe("Nachfrage/Produzent/Fleisch", 1, onSubscribeFailure, onSubscribe);
     
     int ch;
     do 
