@@ -16,7 +16,6 @@ void Mqtt::connect(const char *address, const char * id, void (*onConnectionLost
         void (*onConnectFailureHandler)(void*, MQTTAsync_failureData*))
 {
     MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
-    MQTTAsync_disconnectOptions disc_opts = MQTTAsync_disconnectOptions_initializer;
     MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
     MQTTAsync_token token;
     this->id = (char*)id;
@@ -62,4 +61,45 @@ void Mqtt::subscribe(const char* topic, int qos, void (*onSubscribeFailureHandle
         //printf("Failed to start subscribe, return code %d\n", rc);
         exit(-1);       
     }
+}
+
+void Mqtt::publish(const char* message, const char* topic, int qos, void (*onPublishSuccededHandler)(void* context, MQTTAsync_successData* response))
+{
+    MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
+    MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
+    int rc;
+
+    //printf("Successful connection\n");
+
+    opts.onSuccess = onPublishSuccededHandler;
+    opts.context = client;
+
+    pubmsg.payload = (void *) message;
+    pubmsg.payloadlen = std::string(message).size();
+    pubmsg.qos = qos;
+    pubmsg.retained = 0;
+    deliveredtoken = 0;
+
+    if ((rc = MQTTAsync_sendMessage(client, topic, &pubmsg, &opts)) != MQTTASYNC_SUCCESS)
+    {
+        std::cout << "Failed to start sendMessage, return code: "<< rc << std::endl;
+        exit(-1);       
+    }
+}
+
+void Mqtt::disconnect(void (*onDisconnectHandler)(void* context, MQTTAsync_successData* response))
+{
+    MQTTAsync_disconnectOptions disc_opts = MQTTAsync_disconnectOptions_initializer;
+    int rc;
+    disc_opts.onSuccess = onDisconnectHandler;
+    if ((rc = MQTTAsync_disconnect(client, &disc_opts)) != MQTTASYNC_SUCCESS)
+    {
+            printf("Failed to start disconnect, return code %d\n", rc);
+            exit(-1);       
+    }
+}
+
+Mqtt::~Mqtt()
+{
+     MQTTAsync_destroy(&client);
 }

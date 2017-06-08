@@ -8,6 +8,7 @@
 #include <iostream>
 
 bool isConnected = false;
+bool isDisconnected = false;
 
 void connlost(void *context, char *cause)
 {
@@ -58,6 +59,12 @@ void onConnect(void* context, MQTTAsync_successData* response)
     isConnected = true;
 }
 
+void onDisconnect(void* context, MQTTAsync_successData* response)
+{
+    std::cout << "Successful disconnection"<<std::endl;
+    isDisconnected = true;
+}
+
 void onSubscribe(void* context, MQTTAsync_successData* response)
 {
     std::cout << "Subscribe succeeded!" <<std::endl<<std::endl;
@@ -66,6 +73,11 @@ void onSubscribe(void* context, MQTTAsync_successData* response)
 void onSubscribeFailure(void* context, MQTTAsync_failureData* response)
 {
     std::cout << "Subscribe failed, rc: " << (response ? response->code : 0) <<std::endl<<std::endl;
+}
+
+void onPublishSucceded(void* context, MQTTAsync_successData* response)
+{
+        printf("Successful published\n");
 }
 
 int main ()
@@ -78,10 +90,20 @@ int main ()
     
     mqtt->subscribe("hda/test", 1, onSubscribeFailure, onSubscribe);
     
-    while(true)
+    int ch;
+    do 
     {
+        if(ch == 'p' || ch == 'P')
+        {
+            mqtt->publish("Meine Nachricht", "hda/test", 1, onPublishSucceded);
+        }
         
-    }
+        ch = getchar();
+    } while (ch!='Q' && ch != 'q');
+    
+    mqtt->disconnect(onDisconnect);
+    
+    while(!isDisconnected); // // warte bis Verbindung abgebaut wurde
     
     // Subscribe
     //std::thread t1;
