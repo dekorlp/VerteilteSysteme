@@ -5,7 +5,9 @@
  * and open the template in the editor.
  */
 
-#include "stdio.h"
+#include "Mqtt.h"
+
+/*#include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
 #include "../mqtt/MQTTAsync.h"
@@ -24,9 +26,9 @@ int subscribed = 0;
 #define QOS         1
 #define TIMEOUT     10000L
 
+*/
 
-
-void connlost(void *context, char *cause)
+/*void connlost(void *context, char *cause)
 {
         MQTTAsync client = (MQTTAsync)context;
         MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
@@ -175,15 +177,19 @@ void subscribeThread()
 
 exit:
         MQTTAsync_destroy(&client);
-}
+}*/
 
 int main ()
 {
-    // Subscribe
-    std::thread t1;
     
-    t1 = std::thread(subscribeThread);
-    t1.join();
+    Mqtt mqtt;
+    mqtt.connect("localhost", "12345567");
+    
+    // Subscribe
+    //std::thread t1;
+    
+    //t1 = std::thread(subscribeThread);
+    //t1.join();
     
 }
 
