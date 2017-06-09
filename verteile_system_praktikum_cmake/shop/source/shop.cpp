@@ -22,6 +22,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <mutex>
 #include "Mqtt.h"
 #include "MqttHandler.h"
 #include "Lieferanten.h"
@@ -50,6 +51,7 @@ int sensorPrice4 = 4;
 
 Bill bill;
 std::vector<Lieferant> lieferanten;
+std::mutex lieferantenMutex;
 
 class ShopRequestHandler : virtual public ShopRequestIf {
 public:
@@ -166,7 +168,9 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             lieferant.setLieferantTopic(bestellungTopic);
             lieferant.setLieferantPrice(std::stoi(preise));
             
+            lieferantenMutex.lock();
             lieferanten.push_back(lieferant);
+            lieferantenMutex.unlock();
         }
         
         std::cout << "Nachfrage/Produzent/Milch" << std::endl;
@@ -196,7 +200,9 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             lieferant.setLieferantTopic(bestellungTopic);
             lieferant.setLieferantPrice(std::stoi(preise));
             
+            lieferantenMutex.lock();
             lieferanten.push_back(lieferant);
+            lieferantenMutex.unlock();
         }
         
         std::cout << "Nachfrage/Produzent/Käse" << std::endl;
@@ -225,7 +231,9 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             lieferant.setLieferantTopic(bestellungTopic);
             lieferant.setLieferantPrice(std::stoi(preise));
             
+            lieferantenMutex.lock();
             lieferanten.push_back(lieferant);
+            lieferantenMutex.unlock();
         }
         
         std::cout << "Nachfrage/Produzent/Cola" << std::endl;
@@ -254,7 +262,9 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             lieferant.setLieferantTopic(bestellungTopic);
             lieferant.setLieferantPrice(std::stoi(preise));
             
+            lieferantenMutex.lock();
             lieferanten.push_back(lieferant);
+            lieferantenMutex.unlock();
         }
         
         std::cout << "Nachfrage/Produzent/Fleisch" << std::endl;
@@ -288,7 +298,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         mengeCola += std::stoi (menge);
         
         std::cout << std::endl << "Cola: " << menge << " für "<< preis << std::endl;
-        std::cout << "Bestand - Cola: " << mengeMilch << std::endl << std::endl;
+        std::cout << "Bestand - Cola: " << mengeCola << std::endl << std::endl;
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Fleisch"))
     {
@@ -369,6 +379,9 @@ void subscribeThread()
                     mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
                 }
                 publishInput = getchar();
+                publishInput = getchar(); // zurzeit nur ein Workaround weil der sonst das Menü zweimal ausgibt!
+                std::cout << std::endl;
+                std::cout << std::endl;
             } while(publishInput !='B' && publishInput != 'b');
         }
        
@@ -423,7 +436,9 @@ void checkCheapiestShopAndBuy()
             {
                 mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
             }
+            lieferantenMutex.lock();
             lieferanten.clear();
+            lieferantenMutex.unlock();
         }
     }
     
