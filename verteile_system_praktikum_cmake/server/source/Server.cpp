@@ -28,7 +28,7 @@
 #include <thrift/transport/TTransportUtils.h>
 #include <boost/array.hpp>
 
-#include "gen-cpp/ShopRequest.h"
+#include "../gen-cpp/ShopRequest.h"
 #include "ShopConnection.h"
 
 using boost::asio::ip::udp;
@@ -50,7 +50,10 @@ map<int, Sensor*> sensorActualMapList;
 vector<ProductAnswer> OrderList;
 vector<ShopConnection> shopConnections;
 
+vector<ProductAnswer> productsBillList;
+
 mutex m;
+mutex m2;
 
 string getActualTime() {
 
@@ -96,47 +99,48 @@ string includeShopBills(vector<ProductAnswer> productList) {
     for (ProductAnswer product : productList) {
         ss << "<p>";
         ss << "Sensor Nr. [" << product.sensorId << "]" << "\t Menge = " << product.menge << "\t Preis =" << product.preis;
-        ss << "<p>\n";
+        ss << "</p>\n";
     }
     return ss.str();
 }
 
-void requestOrderButton(string site){
-       string option = "";
-        //option = site.substr(site.find('?', 0), site.find(' ', 0) - site.find('?', 0));
-        option = site.substr(site.find('=', 0) + 1, site.find(' ', 0) - site.find('=', 0));
-        site.erase(site.find('?', 0), site.find(' ', 0) - site.find('?', 0));
-        cout << "? gefunden -> ausgabe " << option << endl;
-        int productId = stoi(option) - 1;
+void requestOrderButton(string site) {
+    string option = "";
+    //option = site.substr(site.find('?', 0), site.find(' ', 0) - site.find('?', 0));
+    option = site.substr(site.find('=', 0) + 1, site.find(' ', 0) - site.find('=', 0));
+    site.erase(site.find('?', 0), site.find(' ', 0) - site.find('?', 0));
+    cout << "? gefunden -> ausgabe " << option << endl;
+    int productId = stoi(option) - 1;
 
-        ProductAnswer productAnswer;
+    ProductAnswer productAnswer;
 
-        for (int i = 0; i < shopConnections.size(); i++) {
-            //int price = shopConnections.at(i).requestProduct(productId, bestellMenge);
-            shopConnections.at(i).setPrice(shopConnections.at(i).requestProduct(productId, 100));
+    for (int i = 0; i < shopConnections.size(); i++) {
+        //int price = shopConnections.at(i).requestProduct(productId, bestellMenge);
+        shopConnections.at(i).setPrice(shopConnections.at(i).requestProduct(productId, 100));
+    }
+
+    int cheapestShopIndex = 0;
+    for (int i = 1; i < shopConnections.size(); i++) {
+
+        if (shopConnections.at(cheapestShopIndex).getPrice() > shopConnections.at(i).getPrice()) {
+
+            cheapestShopIndex = i;
         }
+    }
+    cout << "günstigster Preis: " << shopConnections.at(cheapestShopIndex).getPrice() << endl;
 
-        int cheapestShopIndex = 0;
-        for (int i = 1; i < shopConnections.size(); i++) {
+    cout << "Bestellung geht raus: " << productId << "-" << 100 << endl;
+    //transport->open();
+    //client.buyProducts(productAnswer, productId, bestellMenge);
+    //transport->close();
 
-            if (shopConnections.at(cheapestShopIndex).getPrice() > shopConnections.at(i).getPrice()) {
+    productAnswer = shopConnections.at(cheapestShopIndex).buyProduct(productId, 100);
 
-                cheapestShopIndex = i;
-            }
-        }
-        cout << "günstigster Preis: " << shopConnections.at(cheapestShopIndex).getPrice() << endl;
-
-        cout << "Bestellung geht raus: " << productId << "-" << 100 << endl;
-        //transport->open();
-        //client.buyProducts(productAnswer, productId, bestellMenge);
-        //transport->close();
-
-        productAnswer = shopConnections.at(cheapestShopIndex).buyProduct(productId, 100);
-
-        m.lock();
-        OrderList.push_back(productAnswer);
-        m.unlock();
+    m.lock();
+    OrderList.push_back(productAnswer);
+    m.unlock();
 }
+
 
 const char * sendHTTPSite(string site) {
 
@@ -147,13 +151,16 @@ const char * sendHTTPSite(string site) {
     httpHeader += "\nContent-Type: text/html; charset=utf-8";
     httpHeader += "\nContent-Lenght: ";
 
-    
-//    cout << "SEITE AUSGABE" << site << endl;
+
+    //    cout << "SEITE AUSGABE" << site << endl;
     string path = "www/";
     path += site;
-//    cout << "PATH: " << path << endl;
+    //    cout << "PATH: " << path << endl;
     // HTML Body wird dynamisch gefuellt.
     string htmlBody = "";
+    
+//    cout << "IN SEND HTML PATH" << path << "\n" << endl; 
+    
     ifstream myfile(path, ifstream::in);
 
     if (myfile.is_open()) {
@@ -172,22 +179,22 @@ const char * sendHTTPSite(string site) {
             } else if (line.find("<!--shop_bestellungen-->") != -1) {
                 // alle Läden durchgehen und die Produktbestellungen ausgeben
                 
-                for (ShopConnection shopCon : shopConnections) {
-                    htmlBody = shopCon.getIpAdress() + "\n";
-                    cout << shopCon.getIpAdress() << endl;
-                    
-                    vector<ProductAnswer> products = shopCon.getBill().produkte;
-                    htmlBody += includeShopBills(products);
-                    htmlBody += "\n\n";
-                }
-               
-            } else{  
-                // falls 404 Error ausgegeben werden soll
-                httpHeader = "";
-                httpHeader += "HTTP/1.1 404 Not Found";
-                httpHeader += "\nContent-Type: text/html; charset=utf-8";
-                httpHeader += "\nContent-Lenght: ";
-            }
+               cout << "IN LINE FIND SHOP BESTTELUNG !!!!!!" << endl;
+                
+                     
+               for (ShopConnection shopCon : shopConnections) {
+                    htmlBody +="<p>";
+                    htmlBody += shopCon.getIpAdress() + "</p>";
+                    //cout << shopCon.getIpAdress() << endl;
+               }
+                
+                m2.lock();
+                htmlBody += includeShopBills(productsBillList);
+                m2.unlock();
+                
+                htmlBody += "\n";
+
+            } 
         }
         myfile.close();
     } else {
@@ -202,6 +209,7 @@ const char * sendHTTPSite(string site) {
     httpHeader += htmlBody;
 
     const char * buffer = httpHeader.c_str();
+    
     return buffer;
 }
 
@@ -230,28 +238,28 @@ string parseHTMLRequest(char * stream) {
     s = s.erase(0, 5); // löscht GET /
     s = s.substr(0, s.find(' ', 0)); // herausfiltern des HTML Seitennamens 
 
-    cout << "PARSE HTML !!!!!!!!!!!!!!!!!!!!\n\n " << stream << endl;
-    cout << "\n\nPARSE HTML END!!!!!!!!!!!!!!!!!!!!\n\n "  << endl;
-    
-    if(s.size() <= 2){
+ 
+    if (s.size() <= 2) {
         s = "zentrale_haupt";
-    } else if(s.find("sensoren_akt_status", 0) != -1){
+    } else if (s.find("sensoren_akt_status", 0) != -1) {
         s = "sensoren_akt_status";
-    } else if(s.find("sensoren_historie", 0) != -1){
+    } else if (s.find("sensoren_historie", 0) != -1) {
         s = "sensoren_historie";
-    } else if(s.find("shop_bestellungen", 0) != -1){
+    } else if (s.find("shop_bestellungen", 0) != -1) {
         s = "shop_bestellungen";
-    } else if(s.find("shop_nachbestellen", 0) != -1){
+    } else if (s.find("shop_nachbestellen", 0) != -1) {
         s = "shop_nachbestellen";
-    } else if(s.find("zentrale_haupt", 0) != -1 ){
+    } else if (s.find("zentrale_haupt", 0) != -1) {
         s = "zentrale_haupt";
-    } else if(s.find('?', 0) != -1){
-            requestOrderButton(s);
-            s = "shop_nachbestellen";
-    } else{
+    } else if (s.find('?', 0) != -1) {
+        requestOrderButton(s);
+        s = "shop_nachbestellen";
+    } else {
         s = "404Error";
     }
+ 
     
+  
     return s;
 }
 
@@ -302,19 +310,19 @@ public:
     }
 
     void start() {
-        
+
         countConnections++;
         cout << "Connctions: " << countConnections << endl;
-        
+
         socket_.async_read_some(boost::asio::buffer(data_, max_length),
                 boost::bind(&session_TCP::handle_read, this,
                 boost::asio::placeholders::error,
                 boost::asio::placeholders::bytes_transferred));
-        
-        
-        memset(data_,0,sizeof(data_));
-        
-        
+
+
+        memset(data_, 0, sizeof (data_));
+
+
     }
 
 private:
@@ -325,11 +333,12 @@ private:
         if (!error) {
 
             string site = "";
-            
+
             // Anfrage ist ein HTTP GET
             if (checkIfHTMLRequest(data_)) {
                 site = parseHTMLRequest(data_);
                 string s = sendHTTPSite(site);
+                    
                 size_t responseLenght = s.size() * sizeof (string::value_type);
 
                 // Hier wird die Seite verschickt
@@ -345,7 +354,7 @@ private:
             this->socket_.close();
             delete this;
 
-            memset(data_,0,sizeof(data_));
+            memset(data_, 0, sizeof (data_));
 
             if (error != boost::asio::error::operation_aborted) {
 
@@ -358,14 +367,14 @@ private:
 
     void handle_write(const boost::system::error_code& error) {
 
-        memset(data_,0,sizeof(data_));
-        
+        memset(data_, 0, sizeof (data_));
+
         if (!error) {
             cout << "SOCKET CLOSE" << endl;
 
             boost::system::error_code ec;
 
-            
+
             socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
             socket_.close();
 
@@ -538,16 +547,11 @@ void udpSensorServerThread(char* argv) {
 
 void thriftThread(string multiCastAdress) {
 
-
-    //cout << "THRIFT THREAD FUNCTION" << endl;
-
     try {
-
-
         while (true) {
-
+            //cout << "WHILE TRUE THRIFT THREAD" << endl;
             //cout<< "SENSORMAPLIST SIZE: " << sensorActualMapList.size() << endl;
-            if (sensorActualMapList.size() >= 2) {
+            if (sensorActualMapList.size() >= 1) {
                 for (auto& s : sensorActualMapList) {
 
                     //  int bestellMenge = 100 - stoi(s.second->GetSensorValue());
@@ -556,54 +560,58 @@ void thriftThread(string multiCastAdress) {
 
                         int bestellMenge = 100 - stoi(s.second->GetSensorValue());
 
-
-
-
-                        cout << "HALLE WELT Thrift" << endl;
+                        cout << "For schleife thrift thread " << endl;
                         //cout << "IN THRIFT THREAD IF VALUE <= 20 "<< endl;
                         //bestellMenge =  bestellMenge;
                         ProductAnswer productAnswer;
                         int productId = stoi(s.second->GetSensorNr());
 
-                        cout << shopConnections.size() << " :SIZE SHOP ONNECTIONS" << endl;
+                    //    cout << shopConnections.size() << " :SIZE SHOP ONNECTIONS" << endl;
                         for (int i = 0; i < shopConnections.size(); i++) {
-                            cout << "SET PRICE " << endl;
+                    //        cout << "SET PRICE " << endl;
                             //int price = shopConnections.at(i).requestProduct(productId, bestellMenge);
                             shopConnections.at(i).setPrice(shopConnections.at(i).requestProduct(productId, bestellMenge));
                         }
 
-                       
-                        int cheapestShop = 0;    
-                        for(int i = 0; i < shopConnections.size(); i++){
-                            if(shopConnections.at(cheapestShop).getPrice() >= shopConnections.at(i).getPrice()){
+
+                        int cheapestShop = 0;
+                        for (int i = 0; i < shopConnections.size(); i++) {
+                            if (shopConnections.at(cheapestShop).getPrice() >= shopConnections.at(i).getPrice()) {
                                 cheapestShop = i;
                             }
 
-                        }                        
-                       
+                        }
+
                         cout << "günstigster Preis: " << shopConnections.at(cheapestShop).getPrice() << endl;
-                        cout << "Bestellung geht raus: " <<  s.second->GetSensorNr() << "-" << bestellMenge<<endl;
+                        cout << "Bestellung geht raus: " << s.second->GetSensorNr() << "-" << bestellMenge << endl;
                         productAnswer = shopConnections.at(cheapestShop).buyProduct(productId, bestellMenge);
-                        	
-                        	
+
+
 
                         m.lock();
                         //cout << "ORDER LIST SIZE BEFORE PUSH: " << OrderList.size()<< endl;
-
+/*
                         bool sensorIdExistsInOrderList = false;
                         for (ProductAnswer product : OrderList) {
                             if (product.sensorId == productAnswer.sensorId) {
 
                             }
                         }
+                        */
                         OrderList.push_back(productAnswer);
+                        int newSensorValue = stoi(sensorActualMapList.at(stoi(s.second->GetSensorNr()))->GetSensorValue());
+                        newSensorValue += bestellMenge;
+                      
+                        string newSensorValueString = std::to_string(newSensorValue);
+                        
+                       sensorActualMapList.at(stoi(s.second->GetSensorNr()))->SetSensorValue(newSensorValueString);
                         //cout << "ORDER LIST SIZE AFTER PUSH: " << OrderList.size()<< endl;
                         m.unlock();
 
                     }
                 }
             }
-            sleep(6);
+            sleep(1);   
         }
 
 
@@ -619,6 +627,21 @@ void refillSensorThread() {
 
 
 
+}
+
+void threadGetBill(){
+    
+    while(true){
+    m2.lock();
+    productsBillList.clear();
+    for(ShopConnection sh : shopConnections){
+        for(ProductAnswer pa : sh.getBill().produkte){
+            productsBillList.push_back(pa);
+        }
+    }    
+    m2.unlock();
+    sleep(1);
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -658,18 +681,19 @@ int main(int argc, char* argv[]) {
         thread t2;
         thread t3;
         thread t4;
-
+        thread t5;
+        
         t1 = thread(udpSensorServerThread, argv[1]);
         t2 = thread(tcpWebserverThread, argv[2]);
         t3 = thread(thriftThread, "224.0.0.1");
         t4 = thread(refillSensorThread);
-
+        t5 = thread(threadGetBill);   
 
         t1.join();
         t2.join();
         t3.join();
         t4.join();
-
+        t5.join();
 
 
 
