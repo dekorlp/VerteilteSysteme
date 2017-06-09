@@ -17,7 +17,7 @@
 
 
 #include "ShopConnection.h"
-#include "gen-cpp/ShopRequest.h"
+#include "../gen-cpp/ShopRequest.h"
 
 using namespace apache::thrift;
 using namespace apache::thrift::protocol;
