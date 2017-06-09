@@ -36,6 +36,11 @@ std::string id = "Rewe";
 extern bool isConnected;
 extern bool isDisconnected;
 
+int mengeMilch = 100; // Sensor0
+int mengeKaese = 100;
+int mengeCola = 100;
+int mengeFleisch = 100;
+
 int sensorPrice1 = 2;
 int sensorPrice2 = 5;
 int sensorPrice3 = 3;
@@ -53,19 +58,23 @@ public:
     int32_t requestProduct(const int32_t sendorId, const int32_t bestellMenge) {
         // Your implementation goes here
         int price;
-
+        
         switch (sendorId) {
             case(0):
                         price = sensorPrice1;
+                        
                 break;
             case(1):
                         price = sensorPrice2;
+                        
                 break;
             case(2):
                         price = sensorPrice3;
+                        
                 break;
             case(3):
                         price = sensorPrice4;
+                       
         }
         
         printf("requestProduct\n");
@@ -82,16 +91,24 @@ public:
         pA.menge = bestellMenge;
         switch (sendorId) {
             case(0):
-                        pA.preis = sensorPrice1;
+                    pA.preis = sensorPrice1;
+                    mengeMilch = mengeMilch - bestellMenge;
+                    if(mengeMilch <= 20) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Milch").c_str(),"Nachfrage/Produzent/Milch", 1, onPublishSucceded);
                 break;
             case(1):
-                        pA.preis = sensorPrice2;
+                    pA.preis = sensorPrice2;
+                    mengeKaese = mengeKaese - bestellMenge;
+                    if(mengeKaese <= 20) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Käse").c_str(),"Nachfrage/Produzent/Käse", 1, onPublishSucceded);
                 break;
             case(2):
-                        pA.preis = sensorPrice3;
+                    pA.preis = sensorPrice3;
+                    mengeCola = mengeCola - bestellMenge;
+                    if(mengeCola <= 20) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Cola").c_str(),"Nachfrage/Produzent/Cola", 1, onPublishSucceded);
                 break;
             case(3):
-                        pA.preis = sensorPrice4;
+                    pA.preis = sensorPrice4;
+                    mengeFleisch = mengeFleisch - bestellMenge;
+                    if(mengeFleisch <= 20) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
         }
 
        
@@ -116,28 +133,26 @@ public:
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
 {
-    int length = message->payloadlen;
-
     char* cMessage;
-    cMessage = (char*)calloc( length, sizeof(char));
+    cMessage = (char*)calloc( message->payloadlen+1, sizeof(char));
     strcpy( cMessage, (char*)message->payload);
-    cMessage[length] = '\0';
-    
+    cMessage[message->payloadlen] = '\0';
     std::string sMessage = std::string(cMessage);
+    //free(cMessage);
     
     if(topicName == std::string("Nachfrage/Shop/"+id+ "/Milch"))
     {
-        int positionHash = sMessage.find('#');
+        int positionHash = sMessage.find(';');
         std::string preise = sMessage.substr(0, positionHash);
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
-        std::cout << "Nachfrage/Produzent/Milch" << sMessage << std::endl;
+        std::cout << "Nachfrage/Produzent/Milch" << std::endl;
         mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
         
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Käse"))
     {
-        int positionHash = sMessage.find('#');
+        int positionHash = sMessage.find(';');
         std::string preise = sMessage.substr(0, positionHash);
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
@@ -146,7 +161,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Cola"))
     {
-        int positionHash = sMessage.find('#');
+        int positionHash = sMessage.find(';');
         std::string preise = sMessage.substr(0, positionHash);
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
@@ -155,7 +170,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Fleisch"))
     {
-        int positionHash = sMessage.find('#');
+        int positionHash = sMessage.find(';');
         std::string preise = sMessage.substr(0, positionHash);
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
@@ -164,41 +179,50 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Milch"))
     {
-        int positionHash = sMessage.find('#');
+        int positionHash = sMessage.find(';');
         std::string menge = sMessage.substr(0, positionHash);
         std::string preis = sMessage.substr(positionHash+1, sMessage.length());
+        mengeMilch +=   std::stoi (menge);
         
-        std::cout << "Milch: " << menge << " für "<< preis << std::endl;
+        std::cout << std::endl << "Milch: " << menge << " für "<< preis << std::endl;
+        std::cout << "Bestand - Milch: " << mengeMilch << std::endl << std::endl;
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Käse"))
     {
-        int positionHash = sMessage.find('#');
+        int positionHash = sMessage.find(';');
         std::string menge = sMessage.substr(0, positionHash);
         std::string preis = sMessage.substr(positionHash+1, sMessage.length());
+        mengeKaese += std::stoi (menge);
         
-        std::cout << "Käse: " << menge << " für "<< preis << std::endl;
+        std::cout << std::endl << "Käse: " << menge << " für "<< preis << std::endl;
+        std::cout << "Bestand - Käse: " << mengeKaese << std::endl << std::endl;
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Cola"))
     {
-        int positionHash = sMessage.find('#');
+        int positionHash = sMessage.find(';');
         std::string menge = sMessage.substr(0, positionHash);
         std::string preis = sMessage.substr(positionHash+1, sMessage.length());
+        mengeCola += std::stoi (menge);
         
-        std::cout << "Cola: " << menge << " für "<< preis << std::endl;
+        std::cout << std::endl << "Cola: " << menge << " für "<< preis << std::endl;
+        std::cout << "Bestand - Cola: " << mengeMilch << std::endl << std::endl;
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Fleisch"))
     {
-        int positionHash = sMessage.find('#');
+        int positionHash = sMessage.find(';');
         std::string menge = sMessage.substr(0, positionHash);
         std::string preis = sMessage.substr(positionHash+1, sMessage.length());
+        mengeFleisch += std::stoi (menge);
         
-        std::cout << "Fleisch: " << menge << " für "<< preis << std::endl;
+        std::cout << std::endl << "Fleisch: " << menge << " für "<< preis << std::endl;
+        std::cout << "Bestand - Fleisch: " << mengeFleisch << std::endl << std::endl;
     }
     //std::cout << std::endl << std::endl;
     //std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
     //std::cout << "message: ";
     //std::cout << (char*)message->payload<<std::endl;
     
+    free(cMessage);
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
     return 1;
@@ -223,25 +247,53 @@ void subscribeThread()
     mqtt->subscribe(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
     
     
-    mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Milch").c_str(),"Nachfrage/Produzent/Milch", 1, onPublishSucceded);
-    
     int ch;
     do 
     {
-        if(ch == 's' || ch == 's')
-        {
-            mqtt->subscribe("hda/test", 1, onSubscribeFailure, onSubscribe);
-        }
+        //if(ch == 's' || ch == 's')
+        //{
+        //    mqtt->subscribe("hda/test", 1, onSubscribeFailure, onSubscribe);
+        //}
         
         if(ch == 'p' || ch == 'P')
         {
-            mqtt->publish("Meine Nachricht", "hda/test", 1, onPublishSucceded);
+            int publishInput;
+            while(publishInput !='B' && publishInput != 'b')
+            {
+                
+                std::cout << "Bestellen: Milch: m"<<std::endl;
+                std::cout << "Bestellen: Käse: k"<<std::endl;
+                std::cout << "Bestellen: Cola: c"<<std::endl;
+                std::cout << "Bestellen: Fleisch: f"<<std::endl;
+                std::cout << "Zurueck: b"<<std::endl;
+                std::cout << "Eingabe: ";
+                
+                
+                if(publishInput == 'm' || publishInput == 'M')
+                {
+                    mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Milch").c_str(),"Nachfrage/Produzent/Milch", 1, onPublishSucceded);
+                }
+                else if(publishInput == 'k' || publishInput == 'K')
+                {
+                    mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Käse").c_str(),"Nachfrage/Produzent/Käse", 1, onPublishSucceded);
+                }
+                else if(publishInput == 'c' || publishInput == 'C')
+                {
+                    mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Cola").c_str(),"Nachfrage/Produzent/Cola", 1, onPublishSucceded);
+                }
+                else if(publishInput == 'f' || publishInput == 'F')
+                {
+                    mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
+                }
+                publishInput = getchar();
+                publishInput = getchar();
+            }
         }
-        
-        if(ch == 'u' || ch == 'U')
-        {
-            mqtt->unsubscribe("hda/test", onUnSubscribe);
-        }
+       
+        //if(ch == 'u' || ch == 'U')
+        //{
+        //    mqtt->unsubscribe("hda/test", onUnSubscribe);
+        //}
         
         ch = getchar();
     } while (ch!='Q' && ch != 'q');
@@ -287,8 +339,9 @@ int main(int argc, char **argv) {
     std::thread t1;
     std::thread t2;
     
-    t1 = std::thread(subscribeThread);
     t2 = std::thread(thriftThread);
+    t1 = std::thread(subscribeThread);
+    
     t1.join();
     t2.join();
     

@@ -21,14 +21,13 @@ Mqtt *mqtt;
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
 {
-    int length = message->payloadlen;
     std::stringstream bestellungMilchStringBuilder;
     bestellungMilchStringBuilder << "Bestellung/Produzent/" << id << "/Milch";
    
     char* cMessage;
-    cMessage = (char*)calloc( length, sizeof(char));
+    cMessage = (char*)calloc( message->payloadlen+1, sizeof(char));
     strcpy( cMessage, (char*)message->payload);
-    cMessage[length] = '\0';
+    cMessage[message->payloadlen] = '\0';
     
     std::string sMessage = std::string(cMessage);
     
@@ -36,49 +35,50 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     {
         std::cout << "Nachfrage/Produzent/Milch" << sMessage << std::endl;
         // preis#Topic
-        mqtt->publish(std::string("14#Bestellung/Produzent/"+id+ "/Milch").c_str(), sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("14;Bestellung/Produzent/"+id+ "/Milch").c_str(), sMessage.c_str(), 1, onPublishSucceded);
         
     }
     else if(topicName == std::string("Nachfrage/Produzent/Käse"))
     {
         std::cout << "Nachfrage/Produzent/Käse" << std::endl;
-        mqtt->publish(std::string("20#Bestellung/Produzent/"+id+ "/Käse").c_str(), sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("20;Bestellung/Produzent/"+id+ "/Käse").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Produzent/Cola"))
     {
         std::cout << "Nachfrage/Produzent/Cola" << std::endl;
-        mqtt->publish(std::string("30#Bestellung/Produzent/"+id+ "/Cola").c_str(), sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("30;Bestellung/Produzent/"+id+ "/Cola").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Produzent/Fleisch"))
     {
         std::cout << "Nachfrage/Produzent/Fleisch" << std::endl;
-        mqtt->publish(std::string("40#Bestellung/Produzent/"+id+ "/Fleisch").c_str(), sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish(std::string("40;Bestellung/Produzent/"+id+ "/Fleisch").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Bestellung/Produzent/"+id+ "/Milch"))
     {
         std::cout << "Bestellung/Produzent/"+id+ "/Käse" << std::endl;
-        mqtt->publish("20#14", sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish("20;14", sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Bestellung/Produzent/"+id+ "/Käse"))
     {
         std::cout << "Bestellung/Produzent/Cola" << std::endl;
-        mqtt->publish("20#20", sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish("20;20", sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Bestellung/Produzent/"+id+ "/Cola"))
     {
         std::cout << "Bestellung/Produzent/Fleisch" << std::endl;
-        mqtt->publish("20#30", sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish("20;30", sMessage.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Bestellung/Produzent/"+id+ "/Fleisch"))
     {
         std::cout << "Bestellung/Produzent/Fleisch" << std::endl;
-        mqtt->publish("20#40", sMessage.c_str(), 1, onPublishSucceded);
+        mqtt->publish("20;40", sMessage.c_str(), 1, onPublishSucceded);
     }
     //std::cout << std::endl << std::endl;
     //std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
     //std::cout << "message: ";
     //std::cout << (char*)message->payload<<std::endl;
     
+    free(cMessage);
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
     return 1;
