@@ -21,8 +21,10 @@
 #include <thrift/transport/TBufferTransports.h>
 #include <iostream>
 #include <thread>
+#include <vector>
 #include "Mqtt.h"
 #include "MqttHandler.h"
+#include "Lieferanten.h"
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -37,9 +39,9 @@ extern bool isConnected;
 extern bool isDisconnected;
 
 int mengeMilch = 100; // Sensor0
-int mengeKaese = 100;
-int mengeCola = 100;
-int mengeFleisch = 100;
+int mengeKaese = 100; // Sensor1
+int mengeCola = 100; // Sensor2
+int mengeFleisch = 100; // Sensor3
 
 int sensorPrice1 = 2;
 int sensorPrice2 = 5;
@@ -47,6 +49,7 @@ int sensorPrice3 = 3;
 int sensorPrice4 = 4;
 
 Bill bill;
+std::vector<Lieferant> lieferanten;
 
 class ShopRequestHandler : virtual public ShopRequestIf {
 public:
@@ -146,8 +149,28 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::string preise = sMessage.substr(0, positionHash);
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
+        bool lieferantIsInList = false;
+        for(Lieferant lieferant : lieferanten)
+        {
+            if(bestellungTopic == lieferant.getLieferantTopic())
+            {
+                lieferantIsInList = true;
+                
+                break;
+            }
+        }
+        
+        if(lieferantIsInList == false)
+        {
+            Lieferant lieferant;
+            lieferant.setLieferantTopic(bestellungTopic);
+            lieferant.setLieferantPrice(std::stoi(preise));
+            
+            lieferanten.push_back(lieferant);
+        }
+        
         std::cout << "Nachfrage/Produzent/Milch" << std::endl;
-        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
+        //mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
         
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Käse"))
@@ -156,8 +179,28 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::string preise = sMessage.substr(0, positionHash);
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
+        bool lieferantIsInList = false;
+        for(Lieferant lieferant : lieferanten)
+        {
+            if(bestellungTopic == lieferant.getLieferantTopic())
+            {
+                lieferantIsInList = true;
+                
+                break;
+            }
+        }
+        
+        if(lieferantIsInList == false)
+        {
+            Lieferant lieferant;
+            lieferant.setLieferantTopic(bestellungTopic);
+            lieferant.setLieferantPrice(std::stoi(preise));
+            
+            lieferanten.push_back(lieferant);
+        }
+        
         std::cout << "Nachfrage/Produzent/Käse" << std::endl;
-        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
+        //mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Cola"))
     {
@@ -165,8 +208,28 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::string preise = sMessage.substr(0, positionHash);
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
+        bool lieferantIsInList = false;
+        for(Lieferant lieferant : lieferanten)
+        {
+            if(bestellungTopic == lieferant.getLieferantTopic())
+            {
+                lieferantIsInList = true;
+                
+                break;
+            }
+        }
+        
+        if(lieferantIsInList == false)
+        {
+            Lieferant lieferant;
+            lieferant.setLieferantTopic(bestellungTopic);
+            lieferant.setLieferantPrice(std::stoi(preise));
+            
+            lieferanten.push_back(lieferant);
+        }
+        
         std::cout << "Nachfrage/Produzent/Cola" << std::endl;
-        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
+        //mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Fleisch"))
     {
@@ -174,8 +237,28 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::string preise = sMessage.substr(0, positionHash);
         std::string bestellungTopic = sMessage.substr(positionHash+1, sMessage.length());
         
+        bool lieferantIsInList = false;
+        for(Lieferant lieferant : lieferanten)
+        {
+            if(bestellungTopic == lieferant.getLieferantTopic())
+            {
+                lieferantIsInList = true;
+                
+                break;
+            }
+        }
+        
+        if(lieferantIsInList == false)
+        {
+            Lieferant lieferant;
+            lieferant.setLieferantTopic(bestellungTopic);
+            lieferant.setLieferantPrice(std::stoi(preise));
+            
+            lieferanten.push_back(lieferant);
+        }
+        
         std::cout << "Nachfrage/Produzent/Fleisch" << std::endl;
-        mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
+        //mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Milch"))
     {
@@ -258,7 +341,7 @@ void subscribeThread()
         if(ch == 'p' || ch == 'P')
         {
             int publishInput;
-            while(publishInput !='B' && publishInput != 'b')
+            do
             {
                 
                 std::cout << "Bestellen: Milch: m"<<std::endl;
@@ -286,8 +369,7 @@ void subscribeThread()
                     mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
                 }
                 publishInput = getchar();
-                publishInput = getchar();
-            }
+            } while(publishInput !='B' && publishInput != 'b');
         }
        
         //if(ch == 'u' || ch == 'U')
@@ -304,6 +386,49 @@ void subscribeThread()
     
 }
 
+void checkCheapiestShopAndBuy()
+{
+    while(true)
+    {
+        if(lieferanten.size() != 0)
+        {
+            sleep(2); // umgeht das Problem, dass nicht alle Lieferanten rechtzeitig in der Liste sind
+            int cheapestShopIndex = 0;
+            for (int i = 1; i < lieferanten.size(); i++) {
+
+                if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice()) {
+
+                    cheapestShopIndex = i;
+                }
+            }
+            
+            
+            int indexOfSlash = lieferanten[cheapestShopIndex].getLieferantTopic().find_last_of('/', lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
+            
+            std::string product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
+            
+            if(product == "Milch")
+            {
+                mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
+            }
+            else if(product == "Käse")
+            {
+                mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
+            }
+            else if(product == "Cola")
+            {
+                mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
+            }
+            else if(product == "Fleisch")
+            {
+                mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
+            }
+            lieferanten.clear();
+        }
+    }
+    
+    
+}
 
 void thriftThread()
 {
@@ -338,12 +463,15 @@ int main(int argc, char **argv) {
     
     std::thread t1;
     std::thread t2;
+    std::thread t3;
     
     t2 = std::thread(thriftThread);
     t1 = std::thread(subscribeThread);
+    t3 = std::thread(checkCheapiestShopAndBuy);
     
     t1.join();
     t2.join();
+    t3.join();
     
     
     
