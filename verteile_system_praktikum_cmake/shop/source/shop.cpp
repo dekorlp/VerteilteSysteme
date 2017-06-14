@@ -98,22 +98,22 @@ public:
             case(0):
                     pA.preis = sensorPrice1;
                     mengeMilch = mengeMilch - bestellMenge;
-                    if(mengeMilch <= 20) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Milch").c_str(),"Nachfrage/Produzent/Milch", 1, onPublishSucceded);
+                    if(mengeMilch <= 40) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Milch").c_str(),"Nachfrage/Produzent/Milch", 1, onPublishSucceded);
                 break;
             case(1):
                     pA.preis = sensorPrice2;
                     mengeKaese = mengeKaese - bestellMenge;
-                    if(mengeKaese <= 20) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Käse").c_str(),"Nachfrage/Produzent/Käse", 1, onPublishSucceded);
+                    if(mengeKaese <= 50) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Käse").c_str(),"Nachfrage/Produzent/Käse", 1, onPublishSucceded);
                 break;
             case(2):
                     pA.preis = sensorPrice3;
                     mengeCola = mengeCola - bestellMenge;
-                    if(mengeCola <= 20) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Cola").c_str(),"Nachfrage/Produzent/Cola", 1, onPublishSucceded);
+                    if(mengeCola <= 40) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Cola").c_str(),"Nachfrage/Produzent/Cola", 1, onPublishSucceded);
                 break;
             case(3):
                     pA.preis = sensorPrice4;
                     mengeFleisch = mengeFleisch - bestellMenge;
-                    if(mengeFleisch <= 20) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
+                    if(mengeFleisch <= 40) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
         }
 
        
@@ -167,6 +167,8 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             Lieferant lieferant;
             lieferant.setLieferantTopic(bestellungTopic);
             lieferant.setLieferantPrice(std::stoi(preise));
+            lieferant.setLieferantIsSonderangebot(false);
+            lieferant.setLieferantgueltigkeit(0);
             
             lieferantenMutex.lock();
             lieferanten.push_back(lieferant);
@@ -199,6 +201,8 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             Lieferant lieferant;
             lieferant.setLieferantTopic(bestellungTopic);
             lieferant.setLieferantPrice(std::stoi(preise));
+            lieferant.setLieferantIsSonderangebot(false);
+            lieferant.setLieferantgueltigkeit(0);
             
             lieferantenMutex.lock();
             lieferanten.push_back(lieferant);
@@ -230,6 +234,8 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             Lieferant lieferant;
             lieferant.setLieferantTopic(bestellungTopic);
             lieferant.setLieferantPrice(std::stoi(preise));
+            lieferant.setLieferantIsSonderangebot(false);
+            lieferant.setLieferantgueltigkeit(0);
             
             lieferantenMutex.lock();
             lieferanten.push_back(lieferant);
@@ -261,6 +267,8 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             Lieferant lieferant;
             lieferant.setLieferantTopic(bestellungTopic);
             lieferant.setLieferantPrice(std::stoi(preise));
+            lieferant.setLieferantIsSonderangebot(false);
+            lieferant.setLieferantgueltigkeit(0);
             
             lieferantenMutex.lock();
             lieferanten.push_back(lieferant);
@@ -310,6 +318,158 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         std::cout << std::endl << "Fleisch: " << menge << " für "<< preis << std::endl;
         std::cout << "Bestand - Fleisch: " << mengeFleisch << std::endl << std::endl;
     }
+    
+    // Angebot
+    else if("Angebot/Shop/Milch")
+    {
+        int positionHash = sMessage.find(';'); // finde erstes ; -> Preis
+        std::string preis = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash +1);
+        positionHash = sMessage.find(';'); // finde zweites ; -> Menge
+        std::string menge = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash + 1);
+        positionHash = sMessage.find(';'); // finde drittes ; -> Menge
+        std::string gueltigkeit = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash + 1);
+        std::string response = sMessage.substr(0, sMessage.length());
+        
+        bool lieferantIsInList = false;
+        for(Lieferant lieferant : lieferanten)
+        {
+            if(response == lieferant.getLieferantTopic())
+            {
+                lieferantIsInList = true;
+                
+                break;
+            }
+        }
+        
+        if(lieferantIsInList == false)
+        {
+            Lieferant lieferant;
+            lieferant.setLieferantTopic(response);
+            lieferant.setLieferantPrice(std::stoi(preis));
+            lieferant.setLieferantIsSonderangebot(true);
+            lieferant.setLieferantgueltigkeit(std::stoi(gueltigkeit));
+            
+            lieferantenMutex.lock();
+            lieferanten.push_back(lieferant);
+            lieferantenMutex.unlock();
+        }
+        
+    }
+    else if("Angebot/Shop/Käse")
+    {
+        int positionHash = sMessage.find(';'); // finde erstes ; -> Preis
+        std::string preis = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash +1);
+        positionHash = sMessage.find(';'); // finde zweites ; -> Menge
+        std::string menge = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash + 1);
+        positionHash = sMessage.find(';'); // finde drittes ; -> Menge
+        std::string gueltigkeit = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash + 1);
+        std::string response = sMessage.substr(0, sMessage.length());
+        
+        bool lieferantIsInList = false;
+        for(Lieferant lieferant : lieferanten)
+        {
+            if(response == lieferant.getLieferantTopic())
+            {
+                lieferantIsInList = true;
+                
+                break;
+            }
+        }
+        
+        if(lieferantIsInList == false)
+        {
+            Lieferant lieferant;
+            lieferant.setLieferantTopic(response);
+            lieferant.setLieferantPrice(std::stoi(preis));
+            lieferant.setLieferantIsSonderangebot(true);
+            lieferant.setLieferantgueltigkeit(std::stoi(gueltigkeit));
+            
+            lieferantenMutex.lock();
+            lieferanten.push_back(lieferant);
+            lieferantenMutex.unlock();
+        }
+    }
+    else if("Angebot/Shop/Cola")
+    {
+        int positionHash = sMessage.find(';'); // finde erstes ; -> Preis
+        std::string preis = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash +1);
+        positionHash = sMessage.find(';'); // finde zweites ; -> Menge
+        std::string menge = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash + 1);
+        positionHash = sMessage.find(';'); // finde drittes ; -> Menge
+        std::string gueltigkeit = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash + 1);
+        std::string response = sMessage.substr(0, sMessage.length());
+        
+        bool lieferantIsInList = false;
+        for(Lieferant lieferant : lieferanten)
+        {
+            if(response == lieferant.getLieferantTopic())
+            {
+                lieferantIsInList = true;
+                
+                break;
+            }
+        }
+        
+        if(lieferantIsInList == false)
+        {
+            Lieferant lieferant;
+            lieferant.setLieferantTopic(response);
+            lieferant.setLieferantPrice(std::stoi(preis));
+            lieferant.setLieferantIsSonderangebot(true);
+            lieferant.setLieferantgueltigkeit(std::stoi(gueltigkeit));
+            
+            lieferantenMutex.lock();
+            lieferanten.push_back(lieferant);
+            lieferantenMutex.unlock();
+        }
+    }
+    else if("Angebot/Shop/Fleisch")
+    {
+        int positionHash = sMessage.find(';'); // finde erstes ; -> Preis
+        std::string preis = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash +1);
+        positionHash = sMessage.find(';'); // finde zweites ; -> Menge
+        std::string menge = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash + 1);
+        positionHash = sMessage.find(';'); // finde drittes ; -> Menge
+        std::string gueltigkeit = sMessage.substr(0, positionHash);
+        sMessage.erase(0, positionHash + 1);
+        std::string response = sMessage.substr(0, sMessage.length());
+        
+        bool lieferantIsInList = false;
+        for(Lieferant lieferant : lieferanten)
+        {
+            if(response == lieferant.getLieferantTopic())
+            {
+                lieferantIsInList = true;
+                
+                break;
+            }
+        }
+        
+        if(lieferantIsInList == false)
+        {
+            Lieferant lieferant;
+            lieferant.setLieferantTopic(response);
+            lieferant.setLieferantPrice(std::stoi(preis));
+            lieferant.setLieferantIsSonderangebot(true);
+            lieferant.setLieferantgueltigkeit(std::stoi(gueltigkeit));
+            
+            lieferantenMutex.lock();
+            lieferanten.push_back(lieferant);
+            lieferantenMutex.unlock();
+        }
+    }
+    
     //std::cout << std::endl << std::endl;
     //std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
     //std::cout << "message: ";
@@ -334,11 +494,21 @@ void subscribeThread()
     mqtt->subscribe(std::string("Nachfrage/Shop/"+id+ "/Käse").c_str(), 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe(std::string("Nachfrage/Shop/"+id+ "/Cola").c_str(), 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
+    
     mqtt->subscribe(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
     
+    mqtt->subscribe(std::string("Bestellung/Shop/Milch").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Bestellung/Shop/Käse").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Bestellung/Shop/Cola").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Bestellung/Shop/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
+    
+    mqtt->subscribe(std::string("Angebot/Shop/Milch").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Angebot/Shop/Käse").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Angebot/Shop/Cola").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Angebot/Shop/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
     
     int ch;
     do 
@@ -422,6 +592,11 @@ void checkCheapiestShopAndBuy()
             
             if(product == "Milch")
             {
+                if(lieferanten[cheapestShopIndex].getLieferantIsSonderangebot() == true)
+                {
+                    std::cout << "Milch ist ein Sonderangebot" << std::endl;
+                }
+                
                 mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
             }
             else if(product == "Käse")
@@ -483,7 +658,7 @@ int main(int argc, char **argv) {
     t2 = std::thread(thriftThread);
     t1 = std::thread(subscribeThread);
     t3 = std::thread(checkCheapiestShopAndBuy);
-    
+  
     t1.join();
     t2.join();
     t3.join();

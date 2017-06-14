@@ -20,11 +20,17 @@ class Lieferant{
     private:
         std::string lieferantTopic;
         int price;
+        bool isSonderangebot;
+        int gueltigkeit;
     public:
         void setLieferantTopic(std::string topic);
         std::string getLieferantTopic();
         void setLieferantPrice(int price);
         int getLieferantPrice();
+        void setLieferantIsSonderangebot(bool isSonderangebot);
+        bool getLieferantIsSonderangebot();
+        void setLieferantgueltigkeit(int gueltigkeit);
+        int getLieferantgueltigkeit();
         
 };
 

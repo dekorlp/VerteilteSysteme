@@ -25,3 +25,23 @@ int Lieferant::getLieferantPrice()
 {
     return this->price;
 }
+
+void Lieferant::setLieferantIsSonderangebot(bool isSonderangebot)
+{
+    this->isSonderangebot =  isSonderangebot;
+}
+
+bool Lieferant::getLieferantIsSonderangebot()
+{
+    return isSonderangebot;
+}
+        
+void Lieferant::setLieferantgueltigkeit(int gueltigkeit)
+{
+    this->gueltigkeit = gueltigkeit;
+}
+
+int Lieferant::getLieferantgueltigkeit()
+{
+    return gueltigkeit;
+}
