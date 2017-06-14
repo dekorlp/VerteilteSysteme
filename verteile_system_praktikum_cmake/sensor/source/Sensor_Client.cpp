@@ -57,7 +57,7 @@ void newCoutThread(vector<int> &SensorValueList) {
             for(int element : SensorValueList)
             {
                 
-                 cout << "Ausgabe "  << i<< " "<< element<< endl;
+            
                  i++;
             }
             sleep(3);
@@ -90,7 +90,7 @@ void sensorThread(int sensorNr, int reduceProz, char* argv[], vector<int> &Senso
 
         size_t request_length = stringBuilder.str().size();
 
-        //    cout << "Sensor AUSGABE BEVOR SENDEN" << stringBuilder.str() << endl; 
+
         s.send_to(boost::asio::buffer(cRequest, request_length), *iterator);
 
         /////////// Sende Ende/////////////////
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
         srand(time(NULL));
         thread t[numberOfSensors];
         thread refillThread;
-        thread ausgabeThread;
+
 
         for (int i = 0; i < numberOfSensors; i++) {
             SensorValueList.push_back(100);
@@ -137,17 +137,17 @@ int main(int argc, char* argv[]) {
         refillThread = std::thread(refillSensors,std::ref(SensorValueList));
 
      
-       ausgabeThread = std::thread(newCoutThread,std::ref(SensorValueList));
+     
         for (int i = 0; i < numberOfSensors; i++) {
             t[i].join();
         }
 
-       ausgabeThread.join();
+      
         
         
         refillThread.join();
 
-        //cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+
 
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";

@@ -14,7 +14,7 @@
 
 #include"ShopConnection.h"
 
-#include "gen-cpp/ShopRequest.h"
+#include "../gen-cpp/ShopRequest.h"
 
 
 ShopConnection::ShopConnection()
