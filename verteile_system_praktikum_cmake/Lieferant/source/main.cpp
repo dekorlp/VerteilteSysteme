@@ -15,10 +15,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <ios>
+#include <thread>
 
 extern bool isConnected;
 extern bool isDisconnected;
 
+std::string ipAdresse = "";
 std::string id = "";
 int priceMilch = 14;
 int priceKaese = 20;
@@ -182,25 +184,8 @@ void checkAngebotGueltigkeit()
     }
 }
 
-int main (int argc, char* argv[])
+void subscribeThread()
 {
-    std::string ipAdresse = "";
- 
-    try {
-        if (argc != 7) {
-            std::cerr << "Usage: blocking_udp_echo_client <broker> <id> <Preis Milch> <Preis Käse> <Preis Cola> <Preis Fleisch>\n";
-            return 1;
-        }
-    
-        ipAdresse = std::string("tcp://"+ std::string(argv[1]) + ":1883");
-        id = argv[2];
-        priceMilch = std::stoi(argv[3]);
-        priceKaese = std::stoi(argv[4]);
-        priceCola = std::stoi(argv[5]);
-        priceFleisch = std::stoi(argv[6]);
-        
-        
-    
     mqtt = new Mqtt(ipAdresse.c_str(), id.c_str(), connlost, msgarrvd, onConnect, onConnectFailure);    
     while(!isConnected); // warte bis Verbindung aufgebaut ist
     
@@ -337,6 +322,30 @@ int main (int argc, char* argv[])
     mqtt->disconnect(onDisconnect);
     
     while(!isDisconnected); // // warte bis Verbindung abgebaut wurde    
+}
+
+int main (int argc, char* argv[])
+{
+    try {
+        if (argc != 7) {
+            std::cerr << "Usage: blocking_udp_echo_client <broker> <id> <Preis Milch> <Preis Käse> <Preis Cola> <Preis Fleisch>\n";
+            return 1;
+        }
+    
+        ipAdresse = std::string("tcp://"+ std::string(argv[1]) + ":1883");
+        id = argv[2];
+        priceMilch = std::stoi(argv[3]);
+        priceKaese = std::stoi(argv[4]);
+        priceCola = std::stoi(argv[5]);
+        priceFleisch = std::stoi(argv[6]);
+        
+        std::thread t1;
+        std::thread t2;
+
+        t1 = std::thread(checkAngebotGueltigkeit);
+        t2 = std::thread(subscribeThread);
+        t1.join();
+        t2.join();        
     
     }catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
