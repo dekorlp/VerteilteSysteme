@@ -14,11 +14,12 @@
 #include <mutex>
 #include <string.h>
 #include <unistd.h>
+#include <ios>
 
 extern bool isConnected;
 extern bool isDisconnected;
 
-std::string id = "Milchbauer";
+std::string id = "";
 int priceMilch = 14;
 int priceKaese = 20;
 int priceCola = 30;
@@ -154,34 +155,51 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
 
 void checkAngebotGueltigkeit()
 {
-    std::vector<int> deletableItems;
-    
-    for(int i = 0; i < angebote.size(); i++)
+    while(true)
     {
-        if(angebote.at(i).getGueltigkeit() == 0)
+        std::vector<int> deletableItems;
+
+        for(int i = 0; i < angebote.size(); i++)
         {
-            deletableItems.push_back(i);
+            if(angebote.at(i).getGueltigkeit() == 0)
+            {
+                deletableItems.push_back(i);
+            }
+            else
+            {
+                angebote.at(i).setGueltigkeit(angebote.at(i).getGueltigkeit()  -1);
+            }
         }
-        else
+
+        for(int i = 0; i < deletableItems.size(); i++)
         {
-            angebote.at(i).setGueltigkeit(angebote.at(i).getGueltigkeit()  -1);
+            angeboteMutex.lock();
+            angebote.erase(angebote.begin() + deletableItems.at(i));
+            angeboteMutex.unlock();
         }
+
+        sleep(2);
     }
-  
-    for(int i = 0; i < deletableItems.size(); i++)
-    {
-        angeboteMutex.lock();
-        angebote.erase(angebote.begin() + deletableItems.at(i));
-        angeboteMutex.unlock();
-    }
-    
-    sleep(2);
 }
 
-int main ()
+int main (int argc, char* argv[])
 {
-    std::string ipAdresse = "tcp://192.168.56.3:1883";
+    std::string ipAdresse = "";
+ 
+    try {
+        if (argc != 7) {
+            std::cerr << "Usage: blocking_udp_echo_client <broker> <id> <Preis Milch> <Preis Käse> <Preis Cola> <Preis Fleisch>\n";
+            return 1;
+        }
     
+        ipAdresse = std::string("tcp://"+ std::string(argv[1]) + ":1883");
+        id = argv[2];
+        priceMilch = std::stoi(argv[3]);
+        priceKaese = std::stoi(argv[4]);
+        priceCola = std::stoi(argv[5]);
+        priceFleisch = std::stoi(argv[6]);
+        
+        
     
     mqtt = new Mqtt(ipAdresse.c_str(), id.c_str(), connlost, msgarrvd, onConnect, onConnectFailure);    
     while(!isConnected); // warte bis Verbindung aufgebaut ist
@@ -202,14 +220,14 @@ int main ()
     mqtt->subscribe(std::string("Angebot/Lieferant/"+id+ "/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
     
     
-    int ch;
+    char ch;
     do 
     {
         std::cout << "Angebot erstellen: a" << std::endl;
         std::cout << "Eingabe: " << std::endl;
         if(ch == 'a' || ch == 'A')
         {
-            int publishInput;
+            char publishInput;
             do
             {
                 std::cout << "Angebot: Milch: m"<<std::endl;
@@ -304,18 +322,24 @@ int main ()
                     angeboteMutex.unlock();
                     mqtt->publish(std::string( std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Lieferant/"+id+ "/Fleisch").c_str(), "Angebot/Shop/Fleisch", 1, onPublishSucceded);
                 }
-                publishInput = getchar();
-                publishInput = getchar(); // zurzeit nur ein Workaround weil der sonst das Menü zweimal ausgibt!
+                std::cin >> publishInput;
+                //publishInput = getchar();
+                //publishInput = getchar(); // zurzeit nur ein Workaround weil der sonst das Menü zweimal ausgibt!
                 std::cout << std::endl;
                 std::cout << std::endl;
             }while(publishInput !='B' && publishInput != 'b');
         }
         
-        ch = getchar();
+        ///ch = getchar();
+        std::cin >> ch;
     } while (ch!='Q' && ch != 'q');
     
     mqtt->disconnect(onDisconnect);
     
     while(!isDisconnected); // // warte bis Verbindung abgebaut wurde    
+    
+    }catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+    }
 }
 

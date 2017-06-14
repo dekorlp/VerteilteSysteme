@@ -35,7 +35,8 @@ using namespace ::apache::thrift::server;
 using boost::shared_ptr;
 
 Mqtt *mqtt;
-std::string id = "Rewe";
+std::string id = "";
+std::string ipAdresse = "";
 extern bool isConnected;
 extern bool isDisconnected;
 
@@ -281,7 +282,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         mengeMilch +=   std::stoi (menge);
         
         std::cout << std::endl << "Milch: " << menge << " für "<< preis << std::endl;
-        std::cout << "Bestand - Milch: " << mengeMilch << std::endl << std::endl;
+        //std::cout << "Bestand - Milch: " << mengeMilch << std::endl << std::endl;
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Käse"))
     {
@@ -291,7 +292,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         mengeKaese += std::stoi (menge);
         
         std::cout << std::endl << "Käse: " << menge << " für "<< preis << std::endl;
-        std::cout << "Bestand - Käse: " << mengeKaese << std::endl << std::endl;
+        //std::cout << "Bestand - Käse: " << mengeKaese << std::endl << std::endl;
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Cola"))
     {
@@ -301,7 +302,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         mengeCola += std::stoi (menge);
         
         std::cout << std::endl << "Cola: " << menge << " für "<< preis << std::endl;
-        std::cout << "Bestand - Cola: " << mengeCola << std::endl << std::endl;
+        //std::cout << "Bestand - Cola: " << mengeCola << std::endl << std::endl;
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Fleisch"))
     {
@@ -311,7 +312,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         mengeFleisch += std::stoi (menge);
         
         std::cout << std::endl << "Fleisch: " << menge << " für "<< preis << std::endl;
-        std::cout << "Bestand - Fleisch: " << mengeFleisch << std::endl << std::endl;
+        //std::cout << "Bestand - Fleisch: " << mengeFleisch << std::endl << std::endl;
     }
     
     // Angebot
@@ -472,10 +473,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
 }
 
 void subscribeThread()
-{
-    std::string ipAdresse = "tcp://192.168.56.3:1883";
-    
-    
+{  
     mqtt = new Mqtt(ipAdresse.c_str(), id.c_str(), connlost, msgarrvd, onConnect, onConnectFailure);    
     while(!isConnected); // warte bis Verbindung aufgebaut ist
     
@@ -500,12 +498,12 @@ void subscribeThread()
     mqtt->subscribe(std::string("Angebot/Shop/Cola").c_str(), 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe(std::string("Angebot/Shop/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
     
-    int ch;
+    char ch;
     do 
     {
-        if(ch == 'p' || ch == 'P')
+        if(ch == 'b' || ch == 'B')
         {
-            int publishInput;
+            char publishInput;
             do
             {
                 
@@ -533,14 +531,53 @@ void subscribeThread()
                 {
                     mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
                 }
-                publishInput = getchar();
-                publishInput = getchar(); // zurzeit nur ein Workaround weil der sonst das Menü zweimal ausgibt!
+                std::cin >> publishInput;
+                //publishInput = getchar();
+                //publishInput = getchar(); // zurzeit nur ein Workaround weil der sonst das Menü zweimal ausgibt!
                 std::cout << std::endl;
                 std::cout << std::endl;
             } while(publishInput !='B' && publishInput != 'b');
         }
+        else if(ch == 'a' || ch == 'A')
+        {
+            char publishInput;
+            do
+            {
+                std::cout << "Ausgabe: Milch: m"<<std::endl;
+                std::cout << "Ausgabe: Käse: k"<<std::endl;
+                std::cout << "Ausgabe: Cola: c"<<std::endl;
+                std::cout << "Ausgabe: Fleisch: f"<<std::endl;
+                std::cout << "Zurueck: b"<<std::endl;
+                std::cout << "Eingabe: ";
+
+
+                if(publishInput == 'm' || publishInput == 'M')
+                {
+                    //std::cout << std::endl << "Milch: " << menge << " für "<< preis << std::endl;
+                    std::cout << "Bestand - Milch: " << mengeMilch << std::endl << std::endl;
+                }
+                else if(publishInput == 'k' || publishInput == 'K')
+                {
+                    std::cout << "Bestand - Käse: " << mengeKaese << std::endl << std::endl;
+                }
+                else if(publishInput == 'c' || publishInput == 'C')
+                {
+                   std::cout << "Bestand - Cola: " << mengeCola << std::endl << std::endl;
+                }
+                else if(publishInput == 'f' || publishInput == 'F')
+                {
+                    std::cout << "Bestand - Fleisch: " << mengeFleisch << std::endl << std::endl;
+                }
+                std::cin >> publishInput;
+                //publishInput = getchar();
+                //publishInput = getchar(); // zurzeit nur ein Workaround weil der sonst das Menü zweimal ausgibt!
+                std::cout << std::endl;
+                std::cout << std::endl;
+            } while(publishInput !='B' && publishInput != 'b');
+        }
+            
         
-        ch = getchar();
+        std::cin >> ch;
     } while (ch!='Q' && ch != 'q');
     
     mqtt->disconnect(onDisconnect);
@@ -649,9 +686,25 @@ void checkCheapiestShopAndBuy()
                 
                 mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
             }
-            lieferantenMutex.lock();
-            lieferanten.clear();
-            lieferantenMutex.unlock();
+            
+             std::vector<int> deletableItems;
+    
+            for(int i = 0; i < lieferanten.size(); i++)
+            {
+                if(lieferanten.at(i).getLieferantIsSonderangebot() == false)
+                {
+                    deletableItems.push_back(i);
+                }
+            }
+
+            for(int i = 0; i < deletableItems.size(); i++)
+            {
+                lieferantenMutex.lock();
+                lieferanten.erase(lieferanten.begin() + deletableItems.at(i));
+                lieferantenMutex.unlock();
+            }
+
+
         }
     }
     
@@ -660,31 +713,34 @@ void checkCheapiestShopAndBuy()
 
 void checkAngebotGueltigkeit()
 {
-    std::vector<int> deletableItems;
-    
-    for(int i = 0; i < lieferanten.size(); i++)
+    while(true)
     {
-        if(lieferanten.at(i).getLieferantIsSonderangebot() == true)
+        std::vector<int> deletableItems;
+
+        for(int i = 0; i < lieferanten.size(); i++)
         {
-            if(lieferanten.at(i).getLieferantgueltigkeit() == 0)
+            if(lieferanten.at(i).getLieferantIsSonderangebot() == true)
             {
-                deletableItems.push_back(i);
-            }
-            else
-            {
-                lieferanten.at(i).setLieferantgueltigkeit(lieferanten.at(i).getLieferantgueltigkeit()-1);
+                if(lieferanten.at(i).getLieferantgueltigkeit() == 0)
+                {
+                    deletableItems.push_back(i);
+                }
+                else
+                {
+                    lieferanten.at(i).setLieferantgueltigkeit(lieferanten.at(i).getLieferantgueltigkeit()-1);
+                }
             }
         }
+
+        for(int i = 0; i < deletableItems.size(); i++)
+        {
+            lieferantenMutex.lock();
+            lieferanten.erase(lieferanten.begin() + deletableItems.at(i));
+            lieferantenMutex.unlock();
+        }
+
+        sleep(1);
     }
-    
-    for(int i = 0; i < deletableItems.size(); i++)
-    {
-        lieferantenMutex.lock();
-        lieferanten.erase(lieferanten.begin() + deletableItems.at(i));
-        lieferantenMutex.unlock();
-    }
-    
-    sleep(1);
 }
 
 void thriftThread()
@@ -701,6 +757,15 @@ void thriftThread()
 }
 
 int main(int argc, char **argv) {
+    
+     try {
+        if (argc != 3) {
+            std::cerr << "Usage: blocking_udp_echo_client <broker> <id> <Preis Milch> <Preis Käse> <Preis Cola> <Preis Fleisch>\n";
+            return 1;
+        }
+    
+        ipAdresse = std::string("tcp://"+ std::string(argv[1]) + ":1883");
+        id = argv[2];
     
     std::cout << "Preis für Sensor 1: ";
     std::cin >> sensorPrice1;
@@ -734,6 +799,9 @@ int main(int argc, char **argv) {
     t4.join();
     
     
-    
+     }catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+    }
+     
     return 0;
 }
