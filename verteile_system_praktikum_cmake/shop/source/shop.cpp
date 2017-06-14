@@ -143,7 +143,6 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     strcpy( cMessage, (char*)message->payload);
     cMessage[message->payloadlen] = '\0';
     std::string sMessage = std::string(cMessage);
-    //free(cMessage);
     
     if(topicName == std::string("Nachfrage/Shop/"+id+ "/Milch"))
     {
@@ -176,7 +175,6 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         }
         
         std::cout << "Nachfrage/Produzent/Milch" << std::endl;
-        //mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
         
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Käse"))
@@ -210,7 +208,6 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         }
         
         std::cout << "Nachfrage/Produzent/Käse" << std::endl;
-        //mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Cola"))
     {
@@ -243,7 +240,6 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         }
         
         std::cout << "Nachfrage/Produzent/Cola" << std::endl;
-        //mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Nachfrage/Shop/"+id+ "/Fleisch"))
     {
@@ -276,7 +272,6 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         }
         
         std::cout << "Nachfrage/Produzent/Fleisch" << std::endl;
-        //mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), bestellungTopic.c_str(), 1, onPublishSucceded);
     }
     else if(topicName == std::string("Bestellung/Shop/"+id+ "/Milch"))
     {
@@ -470,11 +465,6 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         }
     }
     
-    //std::cout << std::endl << std::endl;
-    //std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
-    //std::cout << "message: ";
-    //std::cout << (char*)message->payload<<std::endl;
-    
     free(cMessage);
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
@@ -513,11 +503,6 @@ void subscribeThread()
     int ch;
     do 
     {
-        //if(ch == 's' || ch == 's')
-        //{
-        //    mqtt->subscribe("hda/test", 1, onSubscribeFailure, onSubscribe);
-        //}
-        
         if(ch == 'p' || ch == 'P')
         {
             int publishInput;
@@ -554,11 +539,6 @@ void subscribeThread()
                 std::cout << std::endl;
             } while(publishInput !='B' && publishInput != 'b');
         }
-       
-        //if(ch == 'u' || ch == 'U')
-        //{
-        //    mqtt->unsubscribe("hda/test", onUnSubscribe);
-        //}
         
         ch = getchar();
     } while (ch!='Q' && ch != 'q');
@@ -573,13 +553,26 @@ void checkCheapiestShopAndBuy()
 {
     while(true)
     {
-        if(lieferanten.size() != 0)
+        sleep(2); // umgeht das Problem, dass nicht alle Lieferanten rechtzeitig in der Liste sind
+        
+        bool isLieferantenListEmpty = false;
+        
+        for(Lieferant lieferant : lieferanten)
         {
-            sleep(2); // umgeht das Problem, dass nicht alle Lieferanten rechtzeitig in der Liste sind
+            if(lieferant.getLieferantIsSonderangebot() == false)
+            {
+                isLieferantenListEmpty = true;
+                break;
+            }
+        }
+        
+        if(isLieferantenListEmpty == true)
+        {
+           
             int cheapestShopIndex = 0;
             for (int i = 1; i < lieferanten.size(); i++) {
 
-                if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice()) {
+                if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == false) {
 
                     cheapestShopIndex = i;
                 }
@@ -592,23 +585,68 @@ void checkCheapiestShopAndBuy()
             
             if(product == "Milch")
             {
+                
+                
                 if(lieferanten[cheapestShopIndex].getLieferantIsSonderangebot() == true)
                 {
                     std::cout << "Milch ist ein Sonderangebot" << std::endl;
+                }
+                
+                for (int i = 1; i < lieferanten.size(); i++) {
+                    if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == true) {
+                        product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
+                        if(product == "Milch")
+                        {
+                          cheapestShopIndex = i;
+                        }
+                    }
                 }
                 
                 mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
             }
             else if(product == "Käse")
             {
+                for (int i = 1; i < lieferanten.size(); i++) {
+                    if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == true) {
+
+                        product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
+                        if(product == "Käse")
+                        {
+                            cheapestShopIndex = i;
+                        }
+                    }
+                }
+                
                 mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
             }
             else if(product == "Cola")
             {
+                for (int i = 1; i < lieferanten.size(); i++) {
+                    if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == true) {
+
+                        product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
+                        if(product == "Cola")
+                        {
+                            cheapestShopIndex = i;
+                        }
+                    }
+                }
+                
                 mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
             }
             else if(product == "Fleisch")
             {
+                for (int i = 1; i < lieferanten.size(); i++) {
+                    if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == true) {
+
+                        product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
+                        if(product == "Fleisch")
+                        {
+                            cheapestShopIndex = i;
+                        }
+                    }
+                }
+                
                 mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
             }
             lieferantenMutex.lock();
@@ -618,6 +656,35 @@ void checkCheapiestShopAndBuy()
     }
     
     
+}
+
+void checkAngebotGueltigkeit()
+{
+    std::vector<int> deletableItems;
+    
+    for(int i = 0; i < lieferanten.size(); i++)
+    {
+        if(lieferanten.at(i).getLieferantIsSonderangebot() == true)
+        {
+            if(lieferanten.at(i).getLieferantgueltigkeit() == 0)
+            {
+                deletableItems.push_back(i);
+            }
+            else
+            {
+                lieferanten.at(i).setLieferantgueltigkeit(lieferanten.at(i).getLieferantgueltigkeit()-1);
+            }
+        }
+    }
+    
+    for(int i = 0; i < deletableItems.size(); i++)
+    {
+        lieferantenMutex.lock();
+        lieferanten.erase(lieferanten.begin() + deletableItems.at(i));
+        lieferantenMutex.unlock();
+    }
+    
+    sleep(1);
 }
 
 void thriftThread()
@@ -654,14 +721,17 @@ int main(int argc, char **argv) {
     std::thread t1;
     std::thread t2;
     std::thread t3;
+    std::thread t4;
     
     t2 = std::thread(thriftThread);
     t1 = std::thread(subscribeThread);
     t3 = std::thread(checkCheapiestShopAndBuy);
+    t4 = std::thread(checkAngebotGueltigkeit);
   
     t1.join();
     t2.join();
     t3.join();
+    t4.join();
     
     
     

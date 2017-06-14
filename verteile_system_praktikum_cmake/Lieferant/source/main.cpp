@@ -10,8 +10,10 @@
 #include <iostream>
 #include <sstream>
 #include <map>
-#include <list>
+#include <vector>
+#include <mutex>
 #include <string.h>
+#include <unistd.h>
 
 extern bool isConnected;
 extern bool isDisconnected;
@@ -22,15 +24,12 @@ int priceKaese = 20;
 int priceCola = 30;
 int priceFleisch = 40;
 
-std::list<std::string> subscriptedTopicsList;
-std::list<Angebot> angebote;
+std::vector<Angebot> angebote;
+std::mutex angeboteMutex;
 Mqtt *mqtt;
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
-{
-    std::stringstream bestellungMilchStringBuilder;
-    bestellungMilchStringBuilder << "Bestellung/Produzent/" << id << "/Milch";
-   
+{  
     char* cMessage;
     cMessage = (char*)calloc( message->payloadlen+1, sizeof(char));
     strcpy( cMessage, (char*)message->payload);
@@ -146,11 +145,6 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         mqtt->publish(std::string("20;"+std::to_string(price)+"").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
     
-    //std::cout << std::endl << std::endl;
-    //std::cout << "Message arrived" << std::endl << "topic: " << topicName << std::endl;
-    //std::cout << "message: ";
-    //std::cout << (char*)message->payload<<std::endl;
-    
     free(cMessage);
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
@@ -158,7 +152,31 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
 }
 
 
-
+void checkAngebotGueltigkeit()
+{
+    std::vector<int> deletableItems;
+    
+    for(int i = 0; i < angebote.size(); i++)
+    {
+        if(angebote.at(i).getGueltigkeit() == 0)
+        {
+            deletableItems.push_back(i);
+        }
+        else
+        {
+            angebote.at(i).setGueltigkeit(angebote.at(i).getGueltigkeit()  -1);
+        }
+    }
+  
+    for(int i = 0; i < deletableItems.size(); i++)
+    {
+        angeboteMutex.lock();
+        angebote.erase(angebote.begin() + deletableItems.at(i));
+        angeboteMutex.unlock();
+    }
+    
+    sleep(2);
+}
 
 int main ()
 {
@@ -217,7 +235,9 @@ int main ()
                     angebot.setProdukt("Milch");
                     angebot.setPrice(preis);
                     angebot.setGueltigkeit(gueltigkeit);
+                    angeboteMutex.lock();
                     angebote.push_back(angebot);
+                    angeboteMutex.unlock();
                     mqtt->publish(std::string(std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Lieferant/"+id+ "/Milch").c_str(), "Angebot/Shop/Milch", 1, onPublishSucceded);
                     
                 }
@@ -237,7 +257,9 @@ int main ()
                     angebot.setProdukt("Käse");
                     angebot.setPrice(preis);
                     angebot.setGueltigkeit(gueltigkeit);
+                    angeboteMutex.lock();
                     angebote.push_back(angebot);
+                    angeboteMutex.unlock();
                     mqtt->publish(std::string(std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Lieferant/"+id+ "/Käse").c_str(), "Angebot/Shop/Käse", 1, onPublishSucceded);
                 }
                 else if(publishInput == 'c' || publishInput == 'C')
@@ -256,7 +278,9 @@ int main ()
                     angebot.setProdukt("Cola");
                     angebot.setPrice(preis);
                     angebot.setGueltigkeit(gueltigkeit);
+                    angeboteMutex.lock();
                     angebote.push_back(angebot);
+                    angeboteMutex.unlock();
                     mqtt->publish(std::string(std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Lieferant/"+id+ "/Cola").c_str(), "Angebot/Shop/Cola", 1, onPublishSucceded);
                 }
                 else if(publishInput == 'f' || publishInput == 'F')
@@ -275,7 +299,9 @@ int main ()
                     angebot.setProdukt("Fleisch");
                     angebot.setPrice(preis);
                     angebot.setGueltigkeit(gueltigkeit);
+                    angeboteMutex.lock();
                     angebote.push_back(angebot);
+                    angeboteMutex.unlock();
                     mqtt->publish(std::string( std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Lieferant/"+id+ "/Fleisch").c_str(), "Angebot/Shop/Fleisch", 1, onPublishSucceded);
                 }
                 publishInput = getchar();
@@ -285,33 +311,11 @@ int main ()
             }while(publishInput !='B' && publishInput != 'b');
         }
         
-        //if(ch == 's' || ch == 's')
-        //{
-        //    mqtt->subscribe("hda/test", 1, onSubscribeFailure, onSubscribe);
-        //}
-        
-        //if(ch == 'p' || ch == 'P')
-        //{
-        //    mqtt->publish("Meine Nachricht", "hda/test", 1, onPublishSucceded);
-        //}
-        
-        //if(ch == 'u' || ch == 'U')
-        //{
-        //    mqtt->unsubscribe("hda/test", onUnSubscribe);
-        //}
-        
         ch = getchar();
     } while (ch!='Q' && ch != 'q');
     
     mqtt->disconnect(onDisconnect);
     
-    while(!isDisconnected); // // warte bis Verbindung abgebaut wurde
-    
-    // Subscribe
-    //std::thread t1;
-    
-    //t1 = std::thread(subscribeThread);
-    //t1.join();
-    
+    while(!isDisconnected); // // warte bis Verbindung abgebaut wurde    
 }
 
