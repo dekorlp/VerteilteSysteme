@@ -184,7 +184,7 @@ public:
     void getBill(Bill& _return) {
         // Your implementation goes here
         _return = bill;
-        printf("getBill\n");
+        //printf("getBill\n");
     }
 
     void ping() {
@@ -846,7 +846,7 @@ int main(int argc, char **argv) {
     
      try {
         if (argc != 3) {
-            std::cerr << "Usage: blocking_udp_echo_client <broker> <id> <Preis Milch> <Preis Käse> <Preis Cola> <Preis Fleisch>\n";
+            std::cerr << "Usage: blocking_udp_echo_client <broker> <id>\n";
             return 1;
         }
     
