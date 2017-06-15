@@ -29,16 +29,21 @@ int priceFleisch = 40;
 
 std::vector<Angebot> angebote;
 std::mutex angeboteMutex;
+std::mutex memoryAccessMutex;
 Mqtt *mqtt;
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
 {  
+    
+    memoryAccessMutex.lock();
     char* cMessage;
     cMessage = (char*)calloc( message->payloadlen+1, sizeof(char));
     strcpy( cMessage, (char*)message->payload);
     cMessage[message->payloadlen] = '\0';
     
     std::string sMessage = std::string(cMessage);
+    free(cMessage);
+    
     
     if(topicName == std::string("Nachfrage/Produzent/Milch"))
     {
@@ -148,9 +153,9 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         mqtt->publish(std::string("20;"+std::to_string(price)+"").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
     
-    free(cMessage);
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
+    memoryAccessMutex.unlock();
     return 1;
 }
 

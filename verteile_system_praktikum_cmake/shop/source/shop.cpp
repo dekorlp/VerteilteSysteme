@@ -53,6 +53,7 @@ int sensorPrice4 = 4;
 Bill bill;
 std::vector<Lieferant> lieferanten;
 std::mutex lieferantenMutex;
+std::mutex memoryAccessMutex;
 
 class ShopRequestHandler : virtual public ShopRequestIf {
 public:
@@ -96,28 +97,81 @@ public:
         pA.sensorId = sendorId;
         
         
-        pA.menge = bestellMenge;
+        //pA.menge = bestellMenge;
         
         switch (sendorId) {
             case(0):
+                if(mengeMilch - bestellMenge <= 0) 
+                {
+                    pA.menge = 0;
+                    mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Milch").c_str(),"Nachfrage/Produzent/Milch", 1, onPublishSucceded);
+                }
+                else
+                {
+                    pA.menge = bestellMenge;
                     pA.preis = sensorPrice1;
                     mengeMilch = mengeMilch - bestellMenge;
                     if(mengeMilch <= 40) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Milch").c_str(),"Nachfrage/Produzent/Milch", 1, onPublishSucceded);
+                }
+                
+                    
                 break;
             case(1):
+                if(mengeKaese - bestellMenge <= 0) 
+                {
+                    pA.menge = 0;
+                    mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Käse").c_str(),"Nachfrage/Produzent/Käse", 1, onPublishSucceded);
+                }
+                else
+                {
+                    pA.menge = bestellMenge;
                     pA.preis = sensorPrice2;
-                    mengeKaese = mengeKaese - bestellMenge;
-                    if(mengeKaese <= 50) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Käse").c_str(),"Nachfrage/Produzent/Käse", 1, onPublishSucceded);
+                    mengeKaese = mengeMilch - bestellMenge;
+                    if(mengeKaese <= 40) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Käse").c_str(),"Nachfrage/Produzent/Käse", 1, onPublishSucceded);
+                }
+                
+                
+                    //pA.preis = sensorPrice2;
+                    //mengeKaese = mengeKaese - bestellMenge;
+                    //if(mengeKaese <= 50) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Käse").c_str(),"Nachfrage/Produzent/Käse", 1, onPublishSucceded);
                 break;
             case(2):
+                if(mengeCola - bestellMenge <= 0) 
+                {
+                    pA.menge = 0;
+                    mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Cola").c_str(),"Nachfrage/Produzent/Cola", 1, onPublishSucceded);
+                }
+                else
+                {
+                    pA.menge = bestellMenge;
                     pA.preis = sensorPrice3;
                     mengeCola = mengeCola - bestellMenge;
                     if(mengeCola <= 40) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Cola").c_str(),"Nachfrage/Produzent/Cola", 1, onPublishSucceded);
+                }
+                
+                
+                
+                    //pA.preis = sensorPrice3;
+                    //mengeCola = mengeCola - bestellMenge;
+                    //if(mengeCola <= 40) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Cola").c_str(),"Nachfrage/Produzent/Cola", 1, onPublishSucceded);
                 break;
             case(3):
+                if(mengeFleisch - bestellMenge <= 0) 
+                {
+                    pA.menge = 0;
+                    mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
+                }
+                else
+                {
+                    pA.menge = bestellMenge;
                     pA.preis = sensorPrice4;
                     mengeFleisch = mengeFleisch - bestellMenge;
                     if(mengeFleisch <= 40) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
+                }
+                
+                //pA.preis = sensorPrice4;
+                    //mengeFleisch = mengeFleisch - bestellMenge;
+                    //if(mengeFleisch <= 40) mqtt->publish(std::string("Nachfrage/Shop/"+id+ "/Fleisch").c_str(),"Nachfrage/Produzent/Fleisch", 1, onPublishSucceded);
         }
 
        
@@ -142,12 +196,14 @@ public:
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
 {
+    memoryAccessMutex.lock();
     char* cMessage;
     cMessage = (char*)calloc(message->payloadlen+1, sizeof(char));
     strcpy( cMessage, (char*)message->payload);
     cMessage[message->payloadlen] = '\0';
     std::string sMessage = std::string(cMessage);
     free(cMessage);
+    memoryAccessMutex.unlock();
     
     if(topicName == std::string("Nachfrage/Shop/"+id+ "/Milch"))
     {
