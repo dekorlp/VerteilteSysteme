@@ -598,38 +598,47 @@ void checkCheapiestShopAndBuy()
         bool hasLieferantenListNachfrageKaese = false;
         bool hasLieferantenListNachfrageCola = false;
         bool hasLieferantenListNachfrageFleisch = false;
+        int firstIndexMilch = -1;
+        int firstIndexKaese = -1;
+        int firstIndexCola = -1;
+        int firstIndexFleisch = -1;
         
-        
+        int lieferantenIndex = 0;
         for(Lieferant lieferant : lieferanten)
         {
             if(lieferant.getLieferantIsSonderangebot() == false)
             {
                 int indexOfSlash = lieferant.getLieferantTopic().find_last_of('/', lieferant.getLieferantTopic().length()-1);
                 std::string product = lieferant.getLieferantTopic().substr(indexOfSlash+1, lieferant.getLieferantTopic().length()-1);
-                if(product == "Milch")
+                if(product == "Milch" && hasLieferantenListNachfrageMilch == false && firstIndexMilch == -1)
                 {
                     hasLieferantenListNachfrageMilch = true;
+                    firstIndexMilch = lieferantenIndex;
                 }
-                else if(product == "Käse")
+                else if(product == "Käse" && hasLieferantenListNachfrageKaese == false && firstIndexKaese == -1)
                 {
                     hasLieferantenListNachfrageKaese = true;
+                    firstIndexKaese = lieferantenIndex;
                 }
-                else if(product == "Cola")
+                else if(product == "Cola" && hasLieferantenListNachfrageCola == false && firstIndexCola == -1)
                 {
                     hasLieferantenListNachfrageCola = true;
+                    firstIndexCola = lieferantenIndex;
                 }
-                else if(product == "Fleisch")
+                else if(product == "Fleisch" && hasLieferantenListNachfrageFleisch == false && firstIndexFleisch == -1)
                 {
                     hasLieferantenListNachfrageFleisch = true;
+                    firstIndexFleisch = lieferantenIndex;
                 }
             }
+            lieferantenIndex++;
         }
         
         // prüfe ob Nachfrage für Milch vorliegt
         if(hasLieferantenListNachfrageMilch == true)
         {
             
-            int cheapestShopIndex = 0;
+            int cheapestShopIndex = firstIndexMilch;
             for (int i = 0; i < lieferanten.size(); i++) {
 
                 int indexOfSlash = lieferanten.at(i).getLieferantTopic().find_last_of('/', (lieferanten.at(i).getLieferantTopic().length()-1));
@@ -650,7 +659,7 @@ void checkCheapiestShopAndBuy()
         // prüfe ob Nachfrage für Käse vorliegt
         if(hasLieferantenListNachfrageKaese == true)
         {
-            int cheapestShopIndex = 0;
+            int cheapestShopIndex = firstIndexKaese;
             for (int i = 0; i < lieferanten.size(); i++) {
 
                 int indexOfSlash = lieferanten.at(i).getLieferantTopic().find_last_of('/', (lieferanten.at(i).getLieferantTopic().length()-1));
@@ -670,7 +679,7 @@ void checkCheapiestShopAndBuy()
         // prüfe ob Nachfrage für Cola vorliegt
         if(hasLieferantenListNachfrageCola == true)
         {
-            int cheapestShopIndex = 0;
+            int cheapestShopIndex = firstIndexCola;
             for (int i = 0; i < lieferanten.size(); i++) {
 
                 int indexOfSlash = lieferanten.at(i).getLieferantTopic().find_last_of('/', (lieferanten.at(i).getLieferantTopic().length()-1));
@@ -690,7 +699,7 @@ void checkCheapiestShopAndBuy()
         // prüfe ob Nachfrage für Fleisch vorliegt
         if(hasLieferantenListNachfrageFleisch == true)
         {
-            int cheapestShopIndex = 0;
+            int cheapestShopIndex = firstIndexFleisch;
             for (int i = 0; i < lieferanten.size(); i++) {
 
                 int indexOfSlash = lieferanten.at(i).getLieferantTopic().find_last_of('/', (lieferanten.at(i).getLieferantTopic().length()-1));
