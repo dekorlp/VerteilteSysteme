@@ -107,7 +107,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         int price = 0;
         for(Angebot angebot : angebote)
         {
-            if(angebot.getProdukt() == "Milch")
+            if(angebot.getProdukt() == "Käse")
             {
                 price = angebot.getPrice();
                 break;
@@ -122,7 +122,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         int price = 0;
         for(Angebot angebot : angebote)
         {
-            if(angebot.getProdukt() == "Milch")
+            if(angebot.getProdukt() == "Cola")
             {
                 price = angebot.getPrice();
                 break;
@@ -137,7 +137,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         int price = 0;
         for(Angebot angebot : angebote)
         {
-            if(angebot.getProdukt() == "Milch")
+            if(angebot.getProdukt() == "Fleisch")
             {
                 price = angebot.getPrice();
                 break;

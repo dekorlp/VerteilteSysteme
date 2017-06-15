@@ -590,125 +590,142 @@ void checkCheapiestShopAndBuy()
 {
     while(true)
     {
-        sleep(2); // umgeht das Problem, dass nicht alle Lieferanten rechtzeitig in der Liste sind
+        sleep(2);
         
-        bool isLieferantenListEmpty = false;
+        // prüfe ob bereits Nachfragen bestehen und gruppiere sie nach ihren Produkten
+        // Angebote sollen dabei nicht berücksichtigt werden!
+        bool hasLieferantenListNachfrageMilch = false;
+        bool hasLieferantenListNachfrageKaese = false;
+        bool hasLieferantenListNachfrageCola = false;
+        bool hasLieferantenListNachfrageFleisch = false;
+        
         
         for(Lieferant lieferant : lieferanten)
         {
             if(lieferant.getLieferantIsSonderangebot() == false)
             {
-                isLieferantenListEmpty = true;
-                break;
+                int indexOfSlash = lieferant.getLieferantTopic().find_last_of('/', lieferant.getLieferantTopic().length()-1);
+                std::string product = lieferant.getLieferantTopic().substr(indexOfSlash+1, lieferant.getLieferantTopic().length()-1);
+                if(product == "Milch")
+                {
+                    hasLieferantenListNachfrageMilch = true;
+                }
+                else if(product == "Käse")
+                {
+                    hasLieferantenListNachfrageKaese = true;
+                }
+                else if(product == "Cola")
+                {
+                    hasLieferantenListNachfrageCola = true;
+                }
+                else if(product == "Fleisch")
+                {
+                    hasLieferantenListNachfrageFleisch = true;
+                }
             }
         }
         
-        if(isLieferantenListEmpty == true)
+        // prüfe ob Nachfrage für Milch vorliegt
+        if(hasLieferantenListNachfrageMilch == true)
         {
-           
+            
             int cheapestShopIndex = 0;
-            for (int i = 1; i < lieferanten.size(); i++) {
+            for (int i = 0; i < lieferanten.size(); i++) {
 
-                if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == false) {
+                int indexOfSlash = lieferanten.at(i).getLieferantTopic().find_last_of('/', (lieferanten.at(i).getLieferantTopic().length()-1));
+                std::string product = lieferanten.at(i).getLieferantTopic().substr(indexOfSlash+1, (lieferanten.at(i).getLieferantTopic().length()-1));
+           
+                
+                if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() 
+                        && product == "Milch") {
 
                     cheapestShopIndex = i;
                 }
             }
             
+              mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
             
-            int indexOfSlash = lieferanten[cheapestShopIndex].getLieferantTopic().find_last_of('/', lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
-            
-            std::string product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
-            
-            if(product == "Milch")
-            {
-                
-                
-                if(lieferanten[cheapestShopIndex].getLieferantIsSonderangebot() == true)
-                {
-                    std::cout << "Milch ist ein Sonderangebot" << std::endl;
-                }
-                
-                for (int i = 1; i < lieferanten.size(); i++) {
-                    if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == true) {
-                        product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
-                        if(product == "Milch")
-                        {
-                          cheapestShopIndex = i;
-                        }
-                    }
-                }
-                
-                mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Milch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
-            }
-            else if(product == "Käse")
-            {
-                for (int i = 1; i < lieferanten.size(); i++) {
-                    if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == true) {
-
-                        product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
-                        if(product == "Käse")
-                        {
-                            cheapestShopIndex = i;
-                        }
-                    }
-                }
-                
-                mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
-            }
-            else if(product == "Cola")
-            {
-                for (int i = 1; i < lieferanten.size(); i++) {
-                    if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == true) {
-
-                        product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
-                        if(product == "Cola")
-                        {
-                            cheapestShopIndex = i;
-                        }
-                    }
-                }
-                
-                mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
-            }
-            else if(product == "Fleisch")
-            {
-                for (int i = 1; i < lieferanten.size(); i++) {
-                    if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() && lieferanten.at(i).getLieferantIsSonderangebot() == true) {
-
-                        product = lieferanten[cheapestShopIndex].getLieferantTopic().substr(indexOfSlash+1, lieferanten[cheapestShopIndex].getLieferantTopic().length()-1);
-                        if(product == "Fleisch")
-                        {
-                            cheapestShopIndex = i;
-                        }
-                    }
-                }
-                
-                mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
-            }
-            
-             std::vector<int> deletableItems;
-    
-            for(int i = 0; i < lieferanten.size(); i++)
-            {
-                if(lieferanten.at(i).getLieferantIsSonderangebot() == false)
-                {
-                    deletableItems.push_back(i);
-                }
-            }
-
-            for(int i = 0; i < deletableItems.size(); i++)
-            {
-                lieferantenMutex.lock();
-                lieferanten.erase(lieferanten.begin() + deletableItems.at(i));
-                lieferantenMutex.unlock();
-            }
-
-
         }
+        
+        // prüfe ob Nachfrage für Käse vorliegt
+        if(hasLieferantenListNachfrageKaese == true)
+        {
+            int cheapestShopIndex = 0;
+            for (int i = 0; i < lieferanten.size(); i++) {
+
+                int indexOfSlash = lieferanten.at(i).getLieferantTopic().find_last_of('/', (lieferanten.at(i).getLieferantTopic().length()-1));
+                std::string product = lieferanten.at(i).getLieferantTopic().substr(indexOfSlash+1, (lieferanten.at(i).getLieferantTopic().length()-1));
+           
+                
+                if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() 
+                        && product == "Käse") {
+
+                    cheapestShopIndex = i;
+                }
+            }
+            
+              mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Käse").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
+        }
+        
+        // prüfe ob Nachfrage für Cola vorliegt
+        if(hasLieferantenListNachfrageCola == true)
+        {
+            int cheapestShopIndex = 0;
+            for (int i = 0; i < lieferanten.size(); i++) {
+
+                int indexOfSlash = lieferanten.at(i).getLieferantTopic().find_last_of('/', (lieferanten.at(i).getLieferantTopic().length()-1));
+                std::string product = lieferanten.at(i).getLieferantTopic().substr(indexOfSlash+1, (lieferanten.at(i).getLieferantTopic().length()-1));
+           
+                
+                if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() 
+                        && product == "Cola") {
+
+                    cheapestShopIndex = i;
+                }
+            }
+            
+              mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Cola").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
+        }
+        
+        // prüfe ob Nachfrage für Fleisch vorliegt
+        if(hasLieferantenListNachfrageFleisch == true)
+        {
+            int cheapestShopIndex = 0;
+            for (int i = 0; i < lieferanten.size(); i++) {
+
+                int indexOfSlash = lieferanten.at(i).getLieferantTopic().find_last_of('/', (lieferanten.at(i).getLieferantTopic().length()-1));
+                std::string product = lieferanten.at(i).getLieferantTopic().substr(indexOfSlash+1, (lieferanten.at(i).getLieferantTopic().length()-1));
+                
+                if (lieferanten.at(cheapestShopIndex).getLieferantPrice() > lieferanten.at(i).getLieferantPrice() 
+                        && product == "Fleisch") {
+                    
+                    cheapestShopIndex = i;
+                }
+            }
+
+            mqtt->publish(std::string("Bestellung/Shop/"+id+ "/Fleisch").c_str(), lieferanten[cheapestShopIndex].getLieferantTopic().c_str(), 1, onPublishSucceded);
+        }
+        
+        
+        // alle nachfragen aus der Liste löschen, da alle nun abgearbeitet wurden
+        std::vector<int> deletableItems;
+    
+        for(int i = 0; i < lieferanten.size(); i++)
+        {
+            if(lieferanten.at(i).getLieferantIsSonderangebot() == false)
+            {
+                deletableItems.push_back(i);
+            }
+        }
+
+        for(int i = 0; i < deletableItems.size(); i++)
+        {
+            lieferantenMutex.lock();
+            lieferanten.erase(lieferanten.begin() + deletableItems.at(i));
+            lieferantenMutex.unlock();
+        }
+        
     }
-    
-    
 }
 
 void checkAngebotGueltigkeit()
