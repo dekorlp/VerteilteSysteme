@@ -86,7 +86,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
     
     
     // Angebot
-    else if(topicName == std::string("Angebot/Lieferant/"+id+ "/Milch"))
+    else if(topicName == std::string("Angebot/Produzent/"+id+ "/Milch"))
     {
         
         int price = 0;
@@ -99,10 +99,10 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             }
         }
         
-        std::cout << "Angebot/Lieferant/Milch" << std::endl;
+        std::cout << "Angebot/Produzent/Milch" << std::endl;
         mqtt->publish(std::string("20;"+std::to_string(price)+"").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
-    else if(topicName == std::string("Angebot/Lieferant/"+id+ "/Käse"))
+    else if(topicName == std::string("Angebot/Produzent/"+id+ "/Käse"))
     {
         int price = 0;
         for(Angebot angebot : angebote)
@@ -114,10 +114,10 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             }
         }
         
-        std::cout << "Angebot/Lieferant/Käse" << std::endl;
+        std::cout << "Angebot/Produzent/Käse" << std::endl;
         mqtt->publish(std::string("20;"+std::to_string(price)+"").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
-    else if(topicName == std::string("Angebot/Lieferant/"+id+ "/Cola"))
+    else if(topicName == std::string("Angebot/Produzent/"+id+ "/Cola"))
     {
         int price = 0;
         for(Angebot angebot : angebote)
@@ -129,10 +129,10 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             }
         }
         
-        std::cout << "Angebot/Lieferant/Cola" << std::endl;
+        std::cout << "Angebot/Produzent/Cola" << std::endl;
        mqtt->publish(std::string("20;"+std::to_string(price)+"").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
-    else if(topicName == std::string("Angebot/Lieferant/"+id+ "/Fleisch"))
+    else if(topicName == std::string("Angebot/Produzent/"+id+ "/Fleisch"))
     {
         int price = 0;
         for(Angebot angebot : angebote)
@@ -144,7 +144,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
             }
         }
         
-        std::cout << "Angebot/Lieferant/Fleisch" << std::endl;
+        std::cout << "Angebot/Produzent/Fleisch" << std::endl;
         mqtt->publish(std::string("20;"+std::to_string(price)+"").c_str(), sMessage.c_str(), 1, onPublishSucceded);
     }
     
@@ -199,10 +199,10 @@ void subscribeThread()
     mqtt->subscribe(std::string("Bestellung/Produzent/"+id+ "/Cola").c_str(), 1, onSubscribeFailure, onSubscribe);
     mqtt->subscribe(std::string("Bestellung/Produzent/"+id+ "/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
     
-    mqtt->subscribe(std::string("Angebot/Lieferant/"+id+ "/Milch").c_str(), 1, onSubscribeFailure, onSubscribe);
-    mqtt->subscribe(std::string("Angebot/Lieferant/"+id+ "/Käse").c_str(), 1, onSubscribeFailure, onSubscribe);
-    mqtt->subscribe(std::string("Angebot/Lieferant/"+id+ "/Cola").c_str(), 1, onSubscribeFailure, onSubscribe);
-    mqtt->subscribe(std::string("Angebot/Lieferant/"+id+ "/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Angebot/Produzent/"+id+ "/Milch").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Angebot/Produzent/"+id+ "/Käse").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Angebot/Produzent/"+id+ "/Cola").c_str(), 1, onSubscribeFailure, onSubscribe);
+    mqtt->subscribe(std::string("Angebot/Produzent/"+id+ "/Fleisch").c_str(), 1, onSubscribeFailure, onSubscribe);
     
     
     char ch;
@@ -241,7 +241,7 @@ void subscribeThread()
                     angeboteMutex.lock();
                     angebote.push_back(angebot);
                     angeboteMutex.unlock();
-                    mqtt->publish(std::string(std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Lieferant/"+id+ "/Milch").c_str(), "Angebot/Shop/Milch", 1, onPublishSucceded);
+                    mqtt->publish(std::string(std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Produzent/"+id+ "/Milch").c_str(), "Angebot/Shop/Milch", 1, onPublishSucceded);
                     
                 }
                 else if(publishInput == 'k' || publishInput == 'K')
@@ -263,7 +263,7 @@ void subscribeThread()
                     angeboteMutex.lock();
                     angebote.push_back(angebot);
                     angeboteMutex.unlock();
-                    mqtt->publish(std::string(std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Lieferant/"+id+ "/Käse").c_str(), "Angebot/Shop/Käse", 1, onPublishSucceded);
+                    mqtt->publish(std::string(std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Produzent/"+id+ "/Käse").c_str(), "Angebot/Shop/Käse", 1, onPublishSucceded);
                 }
                 else if(publishInput == 'c' || publishInput == 'C')
                 {
@@ -284,7 +284,7 @@ void subscribeThread()
                     angeboteMutex.lock();
                     angebote.push_back(angebot);
                     angeboteMutex.unlock();
-                    mqtt->publish(std::string(std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Lieferant/"+id+ "/Cola").c_str(), "Angebot/Shop/Cola", 1, onPublishSucceded);
+                    mqtt->publish(std::string(std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Produzent/"+id+ "/Cola").c_str(), "Angebot/Shop/Cola", 1, onPublishSucceded);
                 }
                 else if(publishInput == 'f' || publishInput == 'F')
                 {
@@ -305,7 +305,7 @@ void subscribeThread()
                     angeboteMutex.lock();
                     angebote.push_back(angebot);
                     angeboteMutex.unlock();
-                    mqtt->publish(std::string( std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Lieferant/"+id+ "/Fleisch").c_str(), "Angebot/Shop/Fleisch", 1, onPublishSucceded);
+                    mqtt->publish(std::string( std::to_string(preis) + ";" + "20;" + std::to_string(gueltigkeit) + ";Angebot/Produzent/"+id+ "/Fleisch").c_str(), "Angebot/Shop/Fleisch", 1, onPublishSucceded);
                 }
                 std::cin >> publishInput;
                 //publishInput = getchar();
