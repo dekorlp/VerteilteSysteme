@@ -94,7 +94,10 @@ public:
      
 
         pA.sensorId = sendorId;
+        
+        
         pA.menge = bestellMenge;
+        
         switch (sendorId) {
             case(0):
                     pA.preis = sensorPrice1;
@@ -140,10 +143,11 @@ public:
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *message)
 {
     char* cMessage;
-    cMessage = (char*)calloc( message->payloadlen+1, sizeof(char));
+    cMessage = (char*)calloc(message->payloadlen+1, sizeof(char));
     strcpy( cMessage, (char*)message->payload);
     cMessage[message->payloadlen] = '\0';
     std::string sMessage = std::string(cMessage);
+    free(cMessage);
     
     if(topicName == std::string("Nachfrage/Shop/"+id+ "/Milch"))
     {
@@ -466,7 +470,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTAsync_message *me
         }
     }
     
-    free(cMessage);
+    
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);
     return 1;
